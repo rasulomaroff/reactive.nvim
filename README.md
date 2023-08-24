@@ -66,7 +66,50 @@ require('reactive').setup {
 ```
 
 ## Configuration
+
+### Preset Spec
+
+Only 2 fields are required: `name` and `modes`.
+
+| Property  | Type                                                                   | Description                                                                     |
+|-----------|------------------------------------------------------------------------|---------------------------------------------------------------------------------|
+| name      | `string`                                                               | This is your preset's name. It should be unique across other presets. |
+| lazy      | `boolean?`                                                             | This property is meant to be used by other plugin developers. By making your preset lazy you can delay its usage till a user decides to activate it. |
+| priority  | `number?`                                                              | You can set a priority of any preset, if you faced conflicting preset highlights, for example. It's not recommended to set this field, if you are a plugin developer. |
+| skip      | `fun()?: boolean` or `{ winhl?: fun(): boolean, hl?: fun(): boolean }` | This function will be called on every mode change, so that you can define when your preset shouldn't be applied. It should return true, if you want to skip applying highlights. You can also pass a table with functions, if you want to disable only winhighlights or highlights. |
+| init      | `fun()?`                                                               | This function will be called once when a preset inits.                                                                       |
+| modes     | `table<string, TriggerConfig>`                                         | This is a table where a key is a mode (check `:h mode()` for understanding all the modes Neovim has), and a value is a TriggerConfig specification.  |
+| operators | `table<string, TriggerConfig>`||
+| opfuncs   | `table<string, TriggerConfig>`||
+
+**Example:**
+
+```lua
+local my_preset = {
+  name = 'my-preset',
+  skip = function()
+    return vim.api.nvim_buf_get_option(0, 'buftype') == ''
+  end,
+  modes = {
+    n = {
+      -- normal mode configuration
+    },
+    i = {
+      -- insert mode configuration
+    }
+  }
+}
+```
+
+> [!NOTE]
+> What is a `trigger`? `Trigger` is a `mode`, `operator` or `operator function` (opfunc) that triggers highlights. More on this below.
+
+### TriggerConfig Spec
+
 ## Advanced
+
+### Specificity
+
 ## Extending Reactive
 
 # README IN PROGRESS...
