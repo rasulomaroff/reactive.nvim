@@ -20,35 +20,47 @@
 
 ## Table of contents
 
+- [Overview](#overview)
 - [Status](#status)
 - [Getting started](#getting-started)
+  - [Installation](#installation)
+  - [Usage](#usage)
 - [Configuration](#configuration)
+  - [Preset Spec](#preset-spec)
+  - [TriggerConfig Spec](#triggerconfig-spec)
 - [Advanced](#advanced)
+  - [Custom operators](#custom-operators)
+  - [Shared trigger configs](#shared-trigger-configs)
+  - [Specificity](#specificity)
+  - [Mode-bubbling](#mode-bubbling)
 - [Extending Reactive](#extending-reactive)
 
+## Overview
+
+
+
 ## Status
+
+**`reactive`** is in its early stages and some fields, their values may change in favor of convenience in the future, but this should **not** stop you
+from trying this plugin out. Breaking changes (if any) won't happen suddenly and unexpectedly, if they don't break the core behavior of a plugin. In other cases,
+they will be marked `deprecated` and you'll be notified in your Neovim console.
+
 ## Getting started
 ### Requirements
 Neovim version: `>= 0.7.0`
 
-I would be glad if someone points from which version neovim supports both `'winhighlight'` option and `ModeChanged` event.
+I would appreciate it if someone points from which version neovim supports both `'winhighlight'` option and `ModeChanged` event.
 
 ### Installation
 
 - With `lazy.nvim`: 
 ```lua
-{
-  'rasulomaroff/reactive.nvim',
-  event = { 'BufReadPost', 'BufNewFile' },
-}
+{ 'rasulomaroff/reactive.nvim' }
 ```
 
 - With `packer.nvim`
 ```lua
-use {
-  'rasulomaroff/reactive.nvim',
-  event = { 'BufReadPost', 'BufNewFile' }
-}
+use { 'rasulomaroff/reactive.nvim' }
 ```
 
 ### Usage
@@ -82,6 +94,9 @@ Only 2 fields are required: `name` and `modes`.
 | operators | `table<string, TriggerConfig>`||
 | opfuncs   | `table<string, TriggerConfig>`||
 
+> [!NOTE]
+> What is a `Trigger`? `Trigger` is a `mode`, `operator` or `operator function` (opfunc) that triggers highlights. More on this below.
+
 **Example:**
 
 ```lua
@@ -101,14 +116,127 @@ local my_preset = {
 }
 ```
 
-> [!NOTE]
-> What is a `trigger`? `Trigger` is a `mode`, `operator` or `operator function` (opfunc) that triggers highlights. More on this below.
-
 ### TriggerConfig Spec
+
+Trigger config is a table, containing following field:
+
+#### winhl
+type: `table<string, table>`
+
+Table of window-local highlights, that will be applied in a specific mode/operator/opfunc.
+A key in this table is a name of a highlight group and value - its value. The same you set with `vim.api.nvim_set_hl(0, name, value)`.
+
+Example:
+
+```lua
+winhl = {
+  StatusLine = { fg = '#000000', bg = '#ffffff' }
+}
+```
+
+#### hl
+type: `table<string, table>`
+
+Table of highlights, that will be applied in a specific mode/operator/opfunc. Very similar to `winhl`, but these highlights are set globally (in every window).
+For example, `Cursor` hl group cannot be highlighted window-locally, so you can set it here.
+
+Example:
+
+```lua
+hl = {
+  Cursor = { fg = '#00ff00', bg = '#ff00ff' }
+}
+```
+
+#### operators
+type: `TriggerConfig`
+
+This field allows you to configure operators as you configure modes. This is a table where a key is an operator ('d', 'y' or any other valid one),
+and a value is a `TriggerConfig` spec. Highlights that you specify in this table will be prioritized over those from `modes`.
+
+Example:
+
+```lua
+operators = {
+  d = {
+    winhl = {
+      -- if the `no` mode has StatusLine highlight, it will be overwritten by this one below
+      StatusLine = { fg = 'yourcolor', bg = 'yourcolor' }
+    }
+  }
+}
+```
+
+> ![NOTE]
+> This field can only be used inside operator-pending modes, like `no`, `nov`, `noV`, and `no\x16`.
+
+#### opfuncs
+type: `TriggerConfig`
+
+
+
+#### exact
+type: `boolean` or `{ winhl?: boolean, hl?: boolean }`
+
+You don't really need to use this field if a mode you're configuring consists of one letter. It allows you not to apply highlights from modes
+that are less specific than triggered one. For example, if you set this is as `true` for `niI` mode and that mode is triggered, `reactive` won't
+apply highlights from `ni` and `n` modes. (It does it by default due to [mode-bubbling](#mode-bubbling)).
+You can also pass a table identifying which field you want to be exact.
+
+> ![NOTE]
+> This field will be checked **only** for the exact mode triggered. For example, if a triggered mode is `Rv`, `reactive` will check the `exact` field only
+> for `Rv` mode, not for `R`. If you would like to stop mode propagation, look at the `frozen` field. 
+
+#### frozen
+type: `boolean~ or `{ winhl?: boolean, hl?: boolean }`
+
+
+A complete example of a preset can look like the following:
+
+```lua
+
+```
+
 
 ## Advanced
 
+### Custom operators
+
+### Shared trigger configs
+
+You can apply the same config for several modes at once by specifying a key as an array. This also works for operators and operator functions (opfuncs).
+Example:
+
+```lua
+{
+  modes = {
+    [{ 'n', 'i', 'v' }] = {
+      -- shared trigger config for a normal, insert and visual mode
+    },
+    no = {
+      operators = {
+        [{ 'd', 'c' }] = {
+          -- shared trigger config for delete and change operators
+        },
+        ['g@'] = {
+          opfuncs = {
+            [{ 'firstoperator', 'secondoperator' }] = {
+              -- shared trigger config for your custom operators
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
 ### Specificity
+
+### Mode-bubbling
+
+You may think that its a performance issue, since there's no sense in first forming a table with highlights and then erase everything if the last mode is `exact` and
+**_you will be right_**. This is why `Reactive` going backwards from `niI`, then `ni`, finally `n`. If `niI` has `exact` option, `reactive` will stop looking further.
 
 ## Extending Reactive
 
