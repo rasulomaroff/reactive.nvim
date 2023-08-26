@@ -5,7 +5,7 @@ return {
     vim.opt.guicursor:append 'a:ReactiveCursor'
   end,
   modes = {
-    i = {
+    [{ 'i', 'niI' }] = {
       hl = {
         ReactiveCursor = { bg = '#5eead4' },
       },
@@ -49,7 +49,7 @@ return {
         ReactiveCursor = { bg = '#c4b5fd' },
       },
     },
-    R = {
+    [{ 'R', 'niR', 'niV' }] = {
       hl = {
         ReactiveCursor = { bg = '#67e8f9' },
       },
