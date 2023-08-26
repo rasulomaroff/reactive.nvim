@@ -10,9 +10,9 @@ function M.clear_hl(hl)
   return vim.cmd('hi clear ' .. hl)
 end
 
---- Checks if a mode is operator-pending and if it is, whether a motion is forced
+--- Checks if a mode is operator-pending
 ---@param mode string
----@return boolean is_op_mode, boolean? forced
+---@return boolean is_op_mode
 function M.is_op(mode)
   return mode:find 'no' ~= nil
 end
