@@ -28,7 +28,11 @@ aucmd('WinEnter', {
   group = group,
   desc = 'Reactive: applies highlights when entering a window',
   callback = function()
-    Highlight:apply(Snapshot:gen())
+    -- use vim.schedule here because sometimes mode cannot be detected correctly in sync code
+    -- in this event. Especially often happens with telescope-like extensions.
+    vim.schedule(function()
+      Highlight:apply(Snapshot:gen())
+    end)
   end,
 })
 
