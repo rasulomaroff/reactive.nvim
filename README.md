@@ -23,6 +23,7 @@
 - [Overview](#overview)
 - [Status](#status)
 - [Getting started](#getting-started)
+  - [Requirements](#requirements)
   - [Installation](#installation)
   - [Usage](#usage)
 - [Configuration](#configuration)
@@ -31,13 +32,15 @@
 - [Advanced](#advanced)
   - [Custom operators](#custom-operators)
   - [Shared trigger configs](#shared-trigger-configs)
-  - [Specificity](#specificity)
-  - [Mode-bubbling](#mode-bubbling)
+  - [Mode propagation](#mode-propagation)
+  - [Specificity and priority](#specificity-and-priority)
 - [Extending Reactive](#extending-reactive)
 
 ## Overview
 
+> `reactive` 
 
+Here's a short gif demo showing built-in presets in action. As you can see, Neovim feels so responsive and snappy when providing a visual feedback of what is going on: 
 
 ## Status
 
@@ -46,6 +49,7 @@ from trying this plugin out. Breaking changes (if any) won't happen suddenly and
 they will be marked `deprecated` and you'll be notified in your Neovim console.
 
 ## Getting started
+
 ### Requirements
 Neovim version: `>= 0.7.0`
 
@@ -53,12 +57,12 @@ I would appreciate it if someone points from which version neovim supports both 
 
 ### Installation
 
-- With `lazy.nvim`: 
+- With [`lazy.nvim`](https://github.com/folke/lazy.nvim): 
 ```lua
 { 'rasulomaroff/reactive.nvim' }
 ```
 
-- With `packer.nvim`
+- With [`packer.nvim`](https://github.com/wbthomason/packer.nvim)
 ```lua
 use { 'rasulomaroff/reactive.nvim' }
 ```
@@ -77,27 +81,59 @@ require('reactive').setup {
 }
 ```
 
+Alternatively, you can add your own preset:
+
+```lua
+require('reactive').add_preset {
+  -- your preset configuration here
+}
+```
+
+You don't need to call the `setup` function to initialize `reactive`. It will be initialized as soon as you require it.
+The `setup` function is only needed when you want to configure presets that some other plugins added, for example:
+
+```lua
+require('reactive').setup {
+  configs = {
+    -- a key here is a preset name, a value can be a boolean (if false, presets will be disabled)
+    -- or a table that overwrites preset's values
+    presetone = {
+      modes = {
+        i = {
+          winhl = {
+            -- overwrites StatusLine highlight group in insert mode
+            StatusLine = { bg = '', fg = '' }
+          }
+        }
+      }
+    },
+    -- disables `presettwo`
+    presettwo = false
+  }
+}
+```
+
 ## Configuration
 
 ### Preset Spec
 
 Only 2 fields are required: `name` and `modes`.
 
-| Property  | Type                                                                   | Description                                                                     |
-|-----------|------------------------------------------------------------------------|---------------------------------------------------------------------------------|
-| name      | `string`                                                               | This is your preset's name. It should be unique across other presets. |
-| lazy      | `boolean?`                                                             | This property is meant to be used by other plugin developers. By making your preset lazy you can delay its usage till a user decides to activate it. |
-| priority  | `number?`                                                              | You can set a priority of any preset, if you faced conflicting preset highlights, for example. It's not recommended to set this field, if you are a plugin developer. |
-| skip      | `fun()?: boolean` or `{ winhl?: fun(): boolean, hl?: fun(): boolean }` | This function will be called on every mode change, so that you can define when your preset shouldn't be applied. It should return true, if you want to skip applying highlights. You can also pass a table with functions, if you want to disable only winhighlights or highlights. |
-| init      | `fun()?`                                                               | This function will be called once when a preset inits.                                                                       |
-| modes     | `table<string, TriggerConfig>`                                         | This is a table where a key is a mode (check `:h mode()` for understanding all the modes Neovim has), and a value is a TriggerConfig specification.  |
-| operators | `table<string, TriggerConfig>`||
-| opfuncs   | `table<string, TriggerConfig>`||
+| Property  | Type                                                                   | Description                                                                                                                                                                                                                                                                             |
+|-----------|------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| name      | `string`                                                               | This is your preset's name. It should be unique across other presets.                                                                                                                                                                                                                   |
+| lazy      | `boolean?`                                                             | This property is meant to be used by other plugin developers. By making your preset lazy you can delay its usage till a user decides to activate it.                                                                                                                                    |
+| priority  | `number?`                                                              | You can set a priority of any preset, if you faced conflicting preset highlights, for example. It's not recommended to set this field, if you are a plugin developer.                                                                                                                   |
+| skip      | `fun()?: boolean` or `{ winhl?: fun(): boolean, hl?: fun(): boolean }` | This function will be called on every mode change, so that you can define when your preset shouldn't be applied. It should return true, if you want to skip applying highlights. You can also pass a table with functions, if you want to disable only window highlights or highlights. |
+| init      | `fun()?`                                                               | This function will be called once when a preset inits.                                                                                                                                                                                                                                  |
+| modes     | `table<string, TriggerConfig>`                                         | This is a table where a key is a mode (check `:h mode()` for understanding all the modes Neovim has), and a value is a `TriggerConfig` specification.                                                                                                                                   |
+| operators | `table<string, TriggerConfig>`                                         | A table where a key is an operator (check `:h operator` to see all existing operators), and a value is a `TriggerConfig` specification.                                                                                                                                                 |
+| opfuncs   | `table<string, TriggerConfig>`                                         | **Experimental**. A table where a key is a name of a custom operator (check [custom operators](#custom-operators) to understand how to configure them), and a value is a `TriggerConfig` specification.                                                                                 |
 
 > [!NOTE]
 > What is a `Trigger`? `Trigger` is a `mode`, `operator` or `operator function` (opfunc) that triggers highlights. More on this below.
 
-**Example:**
+**Example of a preset:**
 
 ```lua
 local my_preset = {
@@ -118,7 +154,7 @@ local my_preset = {
 
 ### TriggerConfig Spec
 
-Trigger config is a table, containing following field:
+Trigger config is a table, containing following field and values:
 
 #### winhl
 type: `table<string, table>`
@@ -151,6 +187,9 @@ hl = {
 #### operators
 type: `TriggerConfig`
 
+> [!NOTE]
+> This field can only be used inside operator-pending modes, like `no`, `nov`, `noV`, and `no\x16`.
+
 This field allows you to configure operators as you configure modes. This is a table where a key is an operator ('d', 'y' or any other valid one),
 and a value is a `TriggerConfig` spec. Highlights that you specify in this table will be prioritized over those from `modes`.
 
@@ -167,40 +206,151 @@ operators = {
 }
 ```
 
-> ![NOTE]
-> This field can only be used inside operator-pending modes, like `no`, `nov`, `noV`, and `no\x16`.
-
 #### opfuncs
 type: `TriggerConfig`
 
-
+You can apply highlights depending on your custom operators. Spec here will be the same as in the `modes` and `operator` fields.
+Read more about using custom operators here.
 
 #### exact
 type: `boolean` or `{ winhl?: boolean, hl?: boolean }`
-
-You don't really need to use this field if a mode you're configuring consists of one letter. It allows you not to apply highlights from modes
-that are less specific than triggered one. For example, if you set this is as `true` for `niI` mode and that mode is triggered, `reactive` won't
-apply highlights from `ni` and `n` modes. (It does it by default due to [mode-bubbling](#mode-bubbling)).
-You can also pass a table identifying which field you want to be exact.
 
 > ![NOTE]
 > This field will be checked **only** for the exact mode triggered. For example, if a triggered mode is `Rv`, `reactive` will check the `exact` field only
 > for `Rv` mode, not for `R`. If you would like to stop mode propagation, look at the `frozen` field. 
 
+You don't really need to use this field if the mode you're configuring consists of one letter. It allows you not to apply highlights from modes
+that are less specific than triggered one. For example, if you set this is as `true` for `niI` mode and that mode is triggered, `reactive` won't
+apply highlights from `ni` and `n` modes. (It does it by default due to [mode propagation](#mode-propagation)).
+You can also pass a table identifying which field you want to be exact.
+
 #### frozen
-type: `boolean~ or `{ winhl?: boolean, hl?: boolean }`
+type: `boolean` or `{ winhl?: boolean, hl?: boolean }`
+
+This field tells `reactive` to stop propagation of mode highlights. Can be a boolean value to stop propagation of highlights completely or a table which
+specifies which highlights should be stopped. So, for example you specified `frozen = true` for the `n` (normal) mode, that means that `reactive` won't
+apply normal mode's highlights to any further `n*` mode, like `no`, `niI`, `niR` etc. You can read more about the mode propagation here.
 
 
 A complete example of a preset can look like the following:
 
 ```lua
-
+local my_preset = {
+  name = 'my-preset',
+  init = function()
+    -- making our cursor to use `MyCursor` highlight group
+    vim.opt.guicursor:append 'MyCursor'
+  end,
+  modes = {
+    n = {
+      winhl = {
+        -- we use `winhl` because we want to highlight CursorLine only in a current window, not in all of them
+        -- if you want to change global highlights, use the `hl` field instead.
+        CursorLine = { bg = '#21202e' }
+      },
+      hl = {
+        MyCursor = { bg = '#FFFFFF' }
+      },
+    },
+    no = {
+      -- You can also specify winhl and hl that will be applied with every operator
+      winhl = {},
+      hl = {},
+      operators = {
+        d = {
+          winhl = {
+            CursorLine = { bg = '#450a0a' }
+          },
+          hl = {
+            MyCursor = { bg = '#fca5a5' }
+          }
+        },
+        y = {
+          winhl = {
+            CursorLine = { bg = '#422006' },
+          },
+          hl = {
+            MyCursor = { bg = '#fdba74' }
+          }
+        }
+      }
+    },
+    i = {
+      winhl = {
+        CursorLine = { bg = '#042f2e' }
+      },
+      hl = {
+        MyCursor = { bg = '#5eead4' }
+      }
+    }
+  }
+}
 ```
 
 
 ## Advanced
 
 ### Custom operators
+
+> [!IMPORTANT]
+> This feature is experimental. Consider possible further changes.
+
+You can apply highlights on custom operators the way you do for built-in operators.
+This is a config for `delete` operator.
+
+```lua
+operators = {
+  d = {}
+}
+```
+
+As you may or may not know, all custom operators in Neovim utilize `g@` operator. Documentation says this operator(g@) calls a function set with the 'operatorfunc' option.
+So, to specify a custom operator you need to use `g@` operator. Let's say we want to highlight `StatusLine` dark violet when [`substitute.nvim`](https://github.com/gbprod/substitute.nvim)
+triggers its `substitute` operator.
+
+From its documentation we see that we should set this mapping to get it work:
+
+```lua
+vim.keymap.set("n", "s", require('substitute').operator, { noremap = true })
+```
+
+To also tell `reactive` that this operator is triggered, we need to change this mapping to look like this:
+
+```lua
+vim.keymap.set("n", "s", function()
+  -- this way reactive will know that substitute's operator is triggered
+  -- the string you pass into this function should be unique across other custom operators
+  -- this method should called BEFORE the actual function
+  require('reactive').set_opfunc 's'
+  require('substitute').operator()
+end, { noremap = true })
+```
+
+> [!WARNING]
+> You can't pass any string to the `set_opfunc` function since that string will eventually be decoded to be used in a highlight group's name.
+> Do **NOT** put any symbols there, except `.` and `@`. Also try to make the string short. As already been said, the string you pass into this
+> function should be unique across other custom operators.
+
+Now to highlight `StatusLine` when that operator is triggered, you Lua code will look like this:
+
+```lua
+operators = {
+  ['g@'] = {
+    -- don't forget you can also set highlights for each custom operator, that will be applied
+    -- every time the `g@` operator is triggered
+    winhl = {},
+    hl = {},
+    opfuncs = {
+      -- 's' here is that unique name we passed into the `set_opfunc` method in the mapping 
+      s = {
+        winhl = {
+          StatusLine = { bg = '#5b21b6' }
+        }
+      }
+    }
+  }
+}
+```
 
 ### Shared trigger configs
 
@@ -231,12 +381,83 @@ Example:
 }
 ```
 
-### Specificity
+### Mode propagation
 
-### Mode-bubbling
+First of all, take a look at this picture. This is how mode propagation works.
 
-You may think that its a performance issue, since there's no sense in first forming a table with highlights and then erase everything if the last mode is `exact` and
-**_you will be right_**. This is why `Reactive` going backwards from `niI`, then `ni`, finally `n`. If `niI` has `exact` option, `reactive` will stop looking further.
+![Firefox 2023-08-26 at 16-18](https://github.com/rasulomaroff/reactive.nvim/assets/80093436/2355461f-b271-4532-8055-4213a87c4a74)
+
+As you can see, when some mode containing 2 or more characters is triggered, it starts propagating from the first character, and then continues
+all the way up to the exact match. When propagating, `reactive` will start to form what's called a `Snapshot`. It's a table containing all of window and global highlights
+that must be applied now.
+
+**Why**
+
+You're possible thinking right now: "Why do we ever need it?". Well, because if you think how modes in Vim/Neovim are implemented, you'll notice that they're made in a very clever and thoughtful
+way.
+
+Let's take the `Rv` mode from the example above. Documentation says it is a 'Virtual Replace' mode, triggered by `gR` keys. If you use this mode,
+you'll notice that it's very similar to the usual 'Replace' mode. It obviously has some differences, but the first letter in `Rv` is `R`, identifying
+that it's a `Replace` mode at first, but a bit specific.
+
+Now let's take `nov` mode (Operator-pending, forced charwise mode). The propagation sequence here will be `n` -> `no` -> `nov`.
+1. `n` -> `no` - when you're in the operator-pending mode, you're still kind of partially in the normal mode as well, because nothing has happenend yet and
+Neovim is waiting for your next action.
+2. `no` -> `nov` - this is still the operator-pending mode, but now more specific. It's forced to act charwise.
+
+#### `exact` and `frozen` fields
+
+This is why we need these fields. If you look at that picture again, you can imagine that `frozen` field removes the blue arrow. For example, if you specify
+`frozen = true` for the `n` mode, `nov` mode won't get highlights from `n` mode (but will from `no`). But if you only want to get highlights from the triggered mode with
+no propagation at all, specifying `exact = true` for a mode will do what you want. The `exact` field is only checked for the whole mode match (if a triggered mode is `no`, the
+`exact` field is only checked for the `no` mode, not for the `n`).
+
+##### Performance considerations
+
+You may think that this is a performance issue, since there's no sense in first forming a table with highlights and then erase everything if the last mode is `exact` and
+**_you will be right_**. This is why `reactive` goes backwards from `niI`, then `ni`, finally `n`. If `niI` has `exact` option, `reactive` will stop looking further.
+
+### Specificity and priority
+
+#### Specificity
+
+Now we have mode propagation, modes, operators, custom operators. How do we know which highlights should be applied? This is when specificity and priority step in.
+Specificity depends on a mode length, meaning that the longer the mode is, the more specific it is.
+
+Let's say we have such a config:
+
+```lua
+modes = {
+  n = {
+    winhl = {
+      WinBar = { ... }
+      StatusLine = { ... }
+    }
+  },
+  no = {
+    winhl = {
+      WinBar = { ... }
+    }
+  }
+}
+```
+
+The `no`'s mode length is 2, whereas the `n`'s is 1. That means that a resulted `Snapshot` will contain `WinBar` highlight from the `no` mode and `StatusLine` highlight
+from the `n` mode.
+
+#### Priority
+
+Priority is intended to solve highlight conflicts between `modes` | `operators` | `operator functions`.
+They are listed below in order of priority:
+
+1. Operator functions
+2. Operators
+3. Modes
+
+Meaning that highlights from operator functions will be prioritized over those from operators, whereas highlights from operators will be prioritized over
+those from modes.
+_Be aware that **Specificity** is still the most important factor. Highlights from a more specific mode will still overwrite those from a less specific one, even if they were
+applied from an operator or an operator function._
 
 ## Extending Reactive
 
