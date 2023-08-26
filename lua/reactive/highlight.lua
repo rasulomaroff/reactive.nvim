@@ -23,21 +23,15 @@ function M:apply_winhl(highlights)
     return
   end
 
-  local winhl_map = {}
   local current_window = vim.api.nvim_get_current_win()
+
+  local winhl_map = {}
 
   local prev_win_winhl = vim.api.nvim_win_get_option(current_window, 'winhighlight')
 
   if prev_win_winhl ~= '' then
-    -- if we didn't set any highlights and they were set by someone else and
-    -- current highlights to be set are empty, then skip
-    if vim.tbl_isempty(self.prev_winhl) and vim.tbl_isempty(highlights) then
-      return
-    end
-
     for _, from_to in ipairs(vim.split(prev_win_winhl, ',')) do
       local from, to = unpack(vim.split(from_to, ':'))
-
       -- we need to check if some other plugin/code hasn't rewritten
       -- this highlight group value or if this highlight value is from
       -- the previous mode, in that case we skip it
@@ -70,9 +64,7 @@ function M:apply_winhl(highlights)
   ---@type string
   winhl_str = winhl_str:sub(1, winhl_str:len() - 1)
 
-  if vim.api.nvim_win_is_valid(current_window) then
-    vim.api.nvim_win_set_option(current_window, 'winhighlight', winhl_str)
-  end
+  vim.api.nvim_win_set_option(current_window, 'winhighlight', winhl_str)
 end
 
 ---@param highlights table<string, table<string, any>>
