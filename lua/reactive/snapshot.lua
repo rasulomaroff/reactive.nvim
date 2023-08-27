@@ -55,7 +55,14 @@ function M:gen(inactive)
         scope[preset.name].constraints = {}
       end
 
-      if not scope[preset.name].skip_checked and preset.skip then
+      local inc_mode_config = preset.modes[inc_mode]
+
+      if dropped_presets[preset.name] or not inc_mode_config then
+        return
+      end
+
+      if len == mode_len then
+        -- we check `skip` method/table only on a first iteration
         if type(preset.skip) == 'table' then
           ---@diagnostic disable-next-line: param-type-mismatch
           if not vim.tbl_isempty(preset.skip) then
@@ -71,23 +78,16 @@ function M:gen(inactive)
 
             if escaped then
               dropped_presets[preset.name] = true
+
+              return
             end
           elseif type(preset.skip) == 'function' and preset.skip() then
             dropped_presets[preset.name] = true
+
+            return
           end
         end
 
-        -- not to run skip function every incremental mode
-        scope[preset.name].skip_checked = true
-      end
-
-      local inc_mode_config = preset.modes[inc_mode]
-
-      if dropped_presets[preset.name] or not inc_mode_config then
-        return
-      end
-
-      if len == mode_len then
         self:merge_shape(inc_mode, inc_mode_config, scope[preset.name].constraints)
 
         if len > 1 and inc_mode_config.exact then
@@ -142,7 +142,6 @@ function M:gen(inactive)
           return
         end
 
-        -- merge_shape(inc_mode, inc_mode_config, constraints)
         self:merge_shape(inc_mode, inc_mode_config, local_constraints)
       end
     end)
