@@ -17,13 +17,6 @@ function M.is_op(mode)
   return mode:find 'no' ~= nil
 end
 
---- Checks if a mode is normal
----@param mode string
----@return boolean is_normal_mode
-function M.is_normal(mode)
-  return not M.is_op(mode) and mode:find 'n' ~= nil
-end
-
 --- Deeply merges two tables without index/numeric keys
 ---@param to table<any>
 ---@param from table<any>
@@ -83,8 +76,6 @@ local invalid_chars_dict = {
 }
 
 local invalid_chars_pattern = '[<>~U!?=\x13\x16]'
--- local hl_mode_template = 'Reactive%s@mode.%s'
--- local hl_op_template = hl_mode_template .. '.@op.%s'
 
 --- Transforms highlight into a unique string
 ---@param hl string
