@@ -44,7 +44,13 @@
 > If you're a plugin developer and considering using `reactive` as a dependency, you can make your plugin (especially if it's a colortheme) much more reactive and more pleasant to use.
 > Read [extending reactive](#extending-reactive) for more on that.
 
-Here's a short gif demo showing built-in presets in action. As you can see, Neovim feels so responsive and snappy when providing a visual feedback of what is going on: 
+Here's a short demo showing built-in presets in action. As you can see, Neovim feels so responsive and snappy when providing a visual feedback of what is going on: 
+
+
+https://github.com/rasulomaroff/reactive.nvim/assets/80093436/7ba3bc78-143c-4daa-b797-16c561b01b3a
+
+> If you watched closely, you could see how `reactive` works with [`flash.nvim`](https://github.com/folke/flash.nvim). Now you will know which window
+> you jumped in and what your current operator is.
 
 ## Status
 
