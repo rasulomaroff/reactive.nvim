@@ -4,6 +4,14 @@ return {
   init = function()
     vim.opt.cursorline = true
   end,
+  static = {
+    winhl = {
+      inactive = {
+        CursorLine = { bg = '#202020' },
+        CursorLineNr = { fg = '#b0b0b0', bg = '#202020' },
+      },
+    },
+  },
   modes = {
     no = {
       operators = {
@@ -17,15 +25,15 @@ return {
         -- change
         c = {
           winhl = {
-            CursorLine = { bg = '#172554' },
-            CursorLineNr = { fg = '#93c5fd', bg = '#172554' },
+            CursorLine = { bg = '#162044' },
+            CursorLineNr = { fg = '#93c5fd', bg = '#162044' },
           },
         },
         -- delete
         d = {
           winhl = {
-            CursorLine = { bg = '#450a0a' },
-            CursorLineNr = { fg = '#fca5a5', bg = '#450a0a' },
+            CursorLine = { bg = '#350808' },
+            CursorLineNr = { fg = '#fca5a5', bg = '#350808' },
           },
         },
         -- yank
@@ -39,14 +47,14 @@ return {
     },
     i = {
       winhl = {
-        CursorLine = { bg = '#042f2e' },
-        CursorLineNr = { fg = '#5eead4', bg = '#042f2e' },
+        CursorLine = { bg = '#012828' },
+        CursorLineNr = { fg = '#5eead4', bg = '#012828' },
       },
     },
     c = {
       winhl = {
-        CursorLine = { bg = '#292524' },
-        CursorLineNr = { fg = '#ffffff', bg = '#292524' },
+        CursorLine = { bg = '#202020' },
+        CursorLineNr = { fg = '#ffffff', bg = '#303030' },
       },
     },
     n = {
