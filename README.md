@@ -7,7 +7,7 @@
 
 ## Features
 
-- **Performant**: `reactive.nvim` uses neovim events to apply highlights (`ModeChanged` for mode changes, `WinEnter` and `WinLeave` for coloring active/inactive windows), your input isn't monitored at all.
+- **Performant**: `reactive.nvim` uses neovim events to apply highlights (`ModeChanged` for mode changes, `WinEnter`, `WinLeave`, and `BufWinEnter` for coloring active/inactive windows), your input isn't monitored at all.
 - **Window highlights**: apply highlights only for a current window. Utilizes `'winhighlight'` neovim-specific option. (read more `:h 'winhighlight'`).
 - **Highlights**: apply/change global highlights on mode changes.
 - **Highly customizable**: you can customize literally any mode, even very specific one like `niI` (triggered when you press Ctrl + o in insert mode)
@@ -29,6 +29,8 @@
 - [Configuration](#configuration)
   - [Preset Spec](#preset-spec)
   - [TriggerConfig Spec](#triggerconfig-spec)
+  - [StaticConfig Spec](#staticconfig-spec)
+  - [Shortcuts](#shortcuts)
 - [Advanced](#advanced)
   - [Custom operators](#custom-operators)
   - [Shared trigger configs](#shared-trigger-configs)
@@ -38,13 +40,15 @@
 
 ## Overview
 
-> `reactive` 
+> `reactive` is a plugin that brings interactivity in your Neovim experience. It allows you to apply window-local or global highlights on mode changes or on window entering/leaving.
+> If you're a plugin developer and considering using `reactive` as a dependency, you can make your plugin (especially if it's a colortheme) much more reactive and more pleasant to use.
+> Read [extending reactive](#extending-reactive) for more on that.
 
 Here's a short gif demo showing built-in presets in action. As you can see, Neovim feels so responsive and snappy when providing a visual feedback of what is going on: 
 
 ## Status
 
-**`reactive`** is in its early stages and some fields, their values may change in favor of convenience in the future, but this should **not** stop you
+**`reactive`** is in its early stages and some fields with their values may change in favor of convenience in the future, but this should **not** stop you
 from trying this plugin out. Breaking changes (if any) won't happen suddenly and unexpectedly, if they don't break the core behavior of a plugin. In other cases,
 they will be marked `deprecated` and you'll be notified in your Neovim console.
 
@@ -119,19 +123,17 @@ require('reactive').setup {
 
 Only 2 fields are required: `name` and `modes`.
 
-| Property  | Type                                                                   | Description                                                                                                                                                                                                                                                                             |
-|-----------|------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| name      | `string`                                                               | This is your preset's name. It should be unique across other presets.                                                                                                                                                                                                                   |
-| lazy      | `boolean?`                                                             | This property is meant to be used by other plugin developers. By making your preset lazy you can delay its usage till a user decides to activate it.                                                                                                                                    |
-| priority  | `number?`                                                              | You can set a priority of any preset, if you faced conflicting preset highlights, for example. It's not recommended to set this field, if you are a plugin developer.                                                                                                                   |
-| skip      | `fun()?: boolean` or `{ winhl?: fun(): boolean, hl?: fun(): boolean }` | This function will be called on every mode change, so that you can define when your preset shouldn't be applied. It should return true, if you want to skip applying highlights. You can also pass a table with functions, if you want to disable only window highlights or highlights. |
-| init      | `fun()?`                                                               | This function will be called once when a preset inits.                                                                                                                                                                                                                                  |
-| modes     | `table<string, TriggerConfig>`                                         | This is a table where a key is a mode (check `:h mode()` for understanding all the modes Neovim has), and a value is a `TriggerConfig` specification.                                                                                                                                   |
-| operators | `table<string, TriggerConfig>`                                         | A table where a key is an operator (check `:h operator` to see all existing operators), and a value is a `TriggerConfig` specification.                                                                                                                                                 |
-| opfuncs   | `table<string, TriggerConfig>`                                         | **Experimental**. A table where a key is a name of a custom operator (check [custom operators](#custom-operators) to understand how to configure them), and a value is a `TriggerConfig` specification.                                                                                 |
-
-> [!NOTE]
-> What is a `Trigger`? `Trigger` is a `mode`, `operator` or `operator function` (opfunc) that triggers highlights. More on this below.
+| Property  | Type                                                                  | Description                                                                                                                                                                                                                                                                             |
+|-----------|-----------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| name      | `string`                                                              | This is your preset's name. It should be unique across other presets.                                                                                                                                                                                                                   |
+| lazy      | `boolean`                                                             | This property is meant to be used by other plugin developers. By making your preset lazy you can delay its usage till a user decides to activate it.                                                                                                                                    |
+| priority  | `number`                                                              | You can set a priority of any preset, if you faced conflicting preset highlights, for example. It's not recommended to set this field, if you are a plugin developer.                                                                                                                   |
+| skip      | `fun(): boolean` or `{ winhl?: fun(): boolean, hl?: fun(): boolean }` | This function will be called on every mode change, so that you can define when your preset shouldn't be applied. It should return true, if you want to skip applying highlights. You can also pass a table with functions, if you want to disable only window highlights or highlights. |
+| init      | `fun()`                                                               | This function will be called once when a preset inits.                                                                                                                                                                                                                                  |
+| modes     | `table<string, TriggerConfig>`                                        | This is a table where a key is a mode (check `:h mode()` for understanding all the modes Neovim has), and a value is a `TriggerConfig` specification.                                                                                                                                   |
+| static    | `StaticConfig`                                                        | Static highlights are applied when there're no such highlights in the `modes` field.                                                                                                                                                                                                    |
+| operators | `table<string, TriggerConfig>`                                        | A table where a key is an operator (check `:h operator` to see all existing operators), and a value is a `TriggerConfig` specification.                                                                                                                                                 |
+| opfuncs   | `table<string, TriggerConfig>`                                        | **Experimental**. A table where a key is a name of a custom operator (check [custom operators](#custom-operators) to understand how to configure them), and a value is a `TriggerConfig` specification.                                                                                 |
 
 **Example of a preset:**
 
@@ -209,13 +211,16 @@ operators = {
 #### opfuncs
 type: `TriggerConfig`
 
+> [!NOTE]
+> This field can only be used inside the `g@` operator.
+
 You can apply highlights depending on your custom operators. Spec here will be the same as in the `modes` and `operator` fields.
-Read more about using custom operators here.
+Read more about using custom operators [here](#custom-operators).
 
 #### exact
 type: `boolean` or `{ winhl?: boolean, hl?: boolean }`
 
-> ![NOTE]
+> [!NOTE]
 > This field will be checked **only** for the exact mode triggered. For example, if a triggered mode is `Rv`, `reactive` will check the `exact` field only
 > for `Rv` mode, not for `R`. If you would like to stop mode propagation, look at the `frozen` field. 
 
@@ -229,7 +234,7 @@ type: `boolean` or `{ winhl?: boolean, hl?: boolean }`
 
 This field tells `reactive` to stop propagation of mode highlights. Can be a boolean value to stop propagation of highlights completely or a table which
 specifies which highlights should be stopped. So, for example you specified `frozen = true` for the `n` (normal) mode, that means that `reactive` won't
-apply normal mode's highlights to any further `n*` mode, like `no`, `niI`, `niR` etc. You can read more about the mode propagation here.
+apply normal mode's highlights to any further `n*` mode, like `no`, `niI`, `niR` etc. You can read more about the mode propagation [here](#mode-propagation).
 
 
 A complete example of a preset can look like the following:
@@ -287,6 +292,62 @@ local my_preset = {
 }
 ```
 
+### StaticConfig Spec
+
+> [!NOTE]
+> Highlights from the `static` field will be only applied when there're no alternatives for them in the `modes` field.
+
+Example:
+
+```lua
+{
+  modes = {
+    -- here is your modes config
+  },
+  static = {
+    hl = {
+      -- put your `fallback` highlights here
+    },
+    winhl = {
+      active = {
+        -- put your highlights for a current window here
+      },
+      inactive = {
+        -- put your highlights for non-current windows here
+      }
+    },
+  }
+}
+```
+
+### Shortcuts
+
+There are some useful shortcuts if you want to match all visual or select modes. Unfortunately, `visual` mode, `visual-line` mode, and `visual-block` mode start from different
+characters and cannot be match just by typing `v` as other modes can be, for example:
+
+1. `insert` mode - `i` (matches all insert modes)
+2. `replace` - `R` (matches all replace modes)
+
+Given that, to match all visual modes you need to use the following config:
+
+```lua
+modes = {
+  -- \x16 here stands for visual block mode, which you can cause by pressing CTRL + v
+  [{ 'v', 'V', '\x16' }] = {
+    -- your config here
+  }
+}
+```
+
+For select modes:
+
+```lua
+modes = {
+  [{ 's', 'S', '\x13' }] = {
+    -- your config here
+  }
+}
+```
 
 ## Advanced
 
@@ -453,12 +514,35 @@ They are listed below in order of priority:
 1. Operator functions
 2. Operators
 3. Modes
+4. Static
 
 Meaning that highlights from operator functions will be prioritized over those from operators, whereas highlights from operators will be prioritized over
-those from modes.
+those from modes. The last colors that will be applied are those from the `static` field.
 _Be aware that **Specificity** is still the most important factor. Highlights from a more specific mode will still overwrite those from a less specific one, even if they were
 applied from an operator or an operator function._
 
 ## Extending Reactive
 
-# README IN PROGRESS...
+The process of extending `reactive` is made as straightforward as possible. If your plugin wants to use `reactive`, just require it and add your preset.
+
+```lua
+require('reactive').add_preset {
+  name = 'your preset name',
+  -- other fields
+  -- do not forget about `lazy` field, if you want to delegate your preset activation to a user
+}
+```
+
+Then, if a user wants to configure your preset, they can do that from the `setup` function:
+
+```lua
+require('reactive').setup {
+  configs = {
+    ['your preset name'] = {
+      -- here they can put custom configuration
+    },
+    -- alternatively, to disable your plugin they can specify a boolean value
+    ['your preset name'] = false -- or true, if your plugin is lazy and a user action is required to enable it
+  }
+}
+```
