@@ -7,8 +7,8 @@ local M = {
 
 ---@param opts { winhl?: table<string, string>, hl?: table<string, table<string, any>> }
 function M:apply(opts)
-  self:apply_winhl(opts.winhl or {})
-  self:apply_hl(opts.hl or {})
+  self:apply_winhl(opts.winhl)
+  self:apply_hl(opts.hl)
 
   -- redraw pending screen updates
   -- without this command some highlights won't be applied immediately
@@ -18,11 +18,6 @@ end
 
 ---@param highlights table<string, string>
 function M:apply_winhl(highlights)
-  -- no sense in making the same work twice
-  if vim.deep_equal(self.prev_winhl, highlights) then
-    return
-  end
-
   local current_window = vim.api.nvim_get_current_win()
 
   local winhl_map = {}
