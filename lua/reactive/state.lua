@@ -17,6 +17,7 @@ local Util = require 'reactive.util'
 ---@field priority? number
 ---@field skip? TriggerConstraints<fun(): boolean> | fun(): boolean
 ---@field modes table<string | table<string>, Reactive.TriggerConfig>
+---@field static? table<string, table>
 ---@field init? fun(preset: Reactive.Preset)
 
 local M = {
@@ -210,7 +211,7 @@ end
 function M:iterate_presets(fn)
   local escaped = false
 
-  Util.eachi(self.priority_presets, function(_, preset)
+  Util.eachi(self.priority_presets, function(preset)
     if fn(self.presets[preset]) then
       escaped = true
     end

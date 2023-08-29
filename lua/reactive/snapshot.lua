@@ -88,7 +88,7 @@ function M:gen(inactive)
           end
         end
 
-        self:merge_shape(inc_mode, inc_mode_config, scope[preset.name].constraints)
+        self:merge_snapshot(inc_mode, inc_mode_config, scope[preset.name].constraints)
 
         if len > 1 and inc_mode_config.exact then
           if type(inc_mode_config.exact) == 'boolean' then
@@ -142,7 +142,7 @@ function M:gen(inactive)
           return
         end
 
-        self:merge_shape(inc_mode, inc_mode_config, local_constraints)
+        self:merge_snapshot(inc_mode, inc_mode_config, local_constraints)
       end
     end)
   end)

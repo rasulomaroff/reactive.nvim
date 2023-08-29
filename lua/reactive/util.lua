@@ -137,10 +137,10 @@ end
 
 ---@generic V
 ---@param t table<V>
----@param fn fun(index:number, value:V): boolean?
+---@param fn fun(value:V, index:number): boolean?
 function M.eachi(t, fn)
   for i, v in ipairs(t) do
-    if fn(i, v) == true then
+    if fn(v, i) == true then
       break
     end
   end
