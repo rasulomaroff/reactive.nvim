@@ -27,9 +27,25 @@ end
 function M:gen(inactive)
   local State = require 'reactive.state'
 
-  self.snapshot = {}
+  self.snapshot = { winhl = {}, hl = {} }
 
-  local mode = inactive and 'n' or self.to
+  -- if we're leaving a window, then we just color that window with `inactive` colors, if present
+  if inactive then
+    State:iterate_presets(function(preset)
+      local constraints = {}
+
+      if preset.static and not vim.tbl_isempty(preset.static) and not self:process_skip(preset.skip, constraints) then
+        self:form_snapshot({
+          winhl = preset.static.winhl and preset.static.winhl.inactive,
+          hl = preset.static.hl,
+        }, '@static.inactive', constraints)
+      end
+    end)
+
+    return self.snapshot
+  end
+
+  local mode = self.to
   local mode_len = #mode
 
   -- store scopes of previous iterations
@@ -37,6 +53,8 @@ function M:gen(inactive)
 
   local dropped_presets = {}
   local presets_len = State:count()
+
+  local has_static = false
 
   Util.iterate_mode_reverse(mode, function(inc_mode, len)
     return State:iterate_presets(function(preset)
@@ -62,30 +80,15 @@ function M:gen(inactive)
       end
 
       if len == mode_len then
+        if preset.static and not vim.tbl_isempty(preset.static) then
+          has_static = true
+        end
+
         -- we check `skip` method/table only on a first iteration
-        if type(preset.skip) == 'table' then
-          ---@diagnostic disable-next-line: param-type-mismatch
-          if not vim.tbl_isempty(preset.skip) then
-            local escaped = true
+        if self:process_skip(preset.skip, scope[preset.name].constraints) then
+          dropped_presets[preset.name] = true
 
-            for _, field in ipairs(shape_fields) do
-              if preset.skip[field] and preset.skip[field]() then
-                scope[preset.name].constraints[field] = true
-              else
-                escaped = false
-              end
-            end
-
-            if escaped then
-              dropped_presets[preset.name] = true
-
-              return
-            end
-          elseif type(preset.skip) == 'function' and preset.skip() then
-            dropped_presets[preset.name] = true
-
-            return
-          end
+          return
         end
 
         self:merge_snapshot(inc_mode, inc_mode_config, scope[preset.name].constraints)
@@ -119,7 +122,7 @@ function M:gen(inactive)
           -- constraints are coming from the "exact", "frozen" and "skip" flags or absent initially
           -- if frozen + exact + skip constraint flags results in disabling all the possible
           -- shape fields, then we just skip this iteration
-          Util.eachi(shape_fields, function(_, val)
+          Util.eachi(shape_fields, function(val)
             -- if a current constraint is true, then we shouldn't process this constraint at all
             if local_constraints[val] then
               return
@@ -147,81 +150,113 @@ function M:gen(inactive)
     end)
   end)
 
+  if has_static then
+    State:iterate_presets(function(preset)
+      if preset.static and not vim.tbl_isempty(preset.static) then
+        self:form_snapshot({
+          winhl = preset.static.winhl and preset.static.winhl.active,
+          hl = preset.static.hl,
+        }, '@static.active', scope[preset.name].constraints)
+      end
+    end)
+  end
+
   self.current_opfunc = nil
 
   return self.snapshot
 end
 
-local merge_handlers = {
-  winhl = function(winhl_shape, preset_winhl, mode, op, current_opfunc)
-    for hl_group, hl_val in pairs(preset_winhl or {}) do
-      if not winhl_shape[hl_group] then
-        if type(hl_val) == 'table' then
-          local rhs
+---@param inc_mode string
+---@param inc_mode_config Reactive.TriggerConfig
+---@param constraints TriggerConstraints<boolean>
+function M:merge_snapshot(inc_mode, inc_mode_config, constraints)
+  if Util.is_op(inc_mode) and inc_mode_config.operators then
+    local op = vim.v.operator
 
-          if op == 'g@' and current_opfunc then
-            rhs = Util.transform_winhl(hl_group, hl_val, mode, op .. '.' .. current_opfunc)
-          else
-            rhs = Util.transform_winhl(hl_group, hl_val, mode, op)
-          end
-
-          -- update preset itself
-          if preset_winhl then
-            preset_winhl[hl_group] = rhs
-          end
-
-          winhl_shape[hl_group] = rhs
-        else
-          winhl_shape[hl_group] = hl_val
-        end
+    if op and inc_mode_config.operators[op] then
+      if
+        op == 'g@'
+        and self.current_opfunc
+        and inc_mode_config.operators[op].opfuncs
+        and inc_mode_config.operators[op].opfuncs[self.current_opfunc]
+      then
+        self:form_snapshot(
+          inc_mode_config.operators[op].opfuncs[self.current_opfunc],
+          ('@mode.%s.@op.g@.%s'):format(inc_mode, self.current_opfunc),
+          constraints
+        )
       end
+
+      self:form_snapshot(inc_mode_config.operators[op], ('@mode.%s.@op.%s'):format(inc_mode, op), constraints)
     end
+  end
+
+  self:form_snapshot(inc_mode_config, ('@mode.%s'):format(inc_mode), constraints)
+end
+
+local merge_handlers = {
+  winhl = function(highlights, scope)
+    Util.each(highlights, function(hl_group, hl_val)
+      if M.snapshot.winhl[hl_group] then
+        return
+      end
+
+      if type(hl_val) == 'table' then
+        local rhs = Util.transform_winhl(hl_group, hl_val, scope)
+
+        -- update preset itself to contain a binding instead of a table value
+        highlights[hl_group] = rhs
+
+        M.snapshot.winhl[hl_group] = rhs
+      else
+        M.snapshot.winhl[hl_group] = hl_val
+      end
+    end)
   end,
-  hl = function(hl_shape, preset_hl)
-    for hl, val in pairs(preset_hl) do
-      if not hl_shape[hl] then
-        hl_shape[hl] = val
+  hl = function(highlights)
+    for hl, val in pairs(highlights) do
+      if not M.snapshot.hl[hl] then
+        M.snapshot.hl[hl] = val
       end
     end
   end,
 }
 
----@param inc_mode string
----@param inc_mode_config Reactive.TriggerConfig
----@param constraints TriggerConstraints<boolean>
-function M:merge_shape(inc_mode, inc_mode_config, constraints)
-  for field, handler in pairs(merge_handlers) do
-    if not constraints[field] then
-      if not self.snapshot[field] then
-        self.snapshot[field] = {}
+function M:form_snapshot(highlights, scope, constraints)
+  Util.each(merge_handlers, function(value)
+    if not highlights[value] or constraints and constraints[value] then
+      return
+    end
+
+    merge_handlers[value](highlights[value], scope)
+  end)
+end
+
+---@param skip table | fun(): boolean
+---@param constraints? table<string, boolean>
+---@return boolean is_dropped
+function M:process_skip(skip, constraints)
+  if type(skip) == 'function' then
+    return skip()
+  end
+
+  if not skip or type(skip) == 'table' and vim.tbl_isempty(skip) then
+    return false
+  end
+
+  local escaped = true
+
+  for _, field in ipairs(shape_fields) do
+    if skip[field] and skip[field]() then
+      if constraints then
+        constraints[field] = true
       end
-
-      if Util.is_op(inc_mode) and inc_mode_config.operators then
-        local op = vim.v.operator
-
-        if op and inc_mode_config.operators[op] then
-          if
-            op == 'g@'
-            and self.current_opfunc
-            and inc_mode_config.operators[op].opfuncs
-            and inc_mode_config.operators[op].opfuncs[self.current_opfunc]
-          then
-            handler(
-              self.snapshot[field],
-              inc_mode_config.operators[op].opfuncs[self.current_opfunc][field] or {},
-              inc_mode,
-              op,
-              self.current_opfunc
-            )
-          end
-
-          handler(self.snapshot[field], inc_mode_config.operators[op][field] or {}, inc_mode, op)
-        end
-      end
-
-      handler(self.snapshot[field], inc_mode_config[field] or {}, inc_mode)
+    else
+      escaped = false
     end
   end
+
+  return escaped
 end
 
 return M

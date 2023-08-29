@@ -83,26 +83,19 @@ local invalid_chars_dict = {
 }
 
 local invalid_chars_pattern = '[<>~U!?=\x13\x16]'
-local hl_mode_template = 'Reactive%s@mode.%s'
-local hl_op_template = hl_mode_template .. '.@op.%s'
+-- local hl_mode_template = 'Reactive%s@mode.%s'
+-- local hl_op_template = hl_mode_template .. '.@op.%s'
 
 --- Transforms highlight into a unique string
 ---@param hl string
 ---@param val table<string, any>
----@param mode string
----@param op_prefix? string
+---@param scope string
 ---@return string transformed_winhl
-function M.transform_winhl(hl, val, mode, op_prefix)
-  mode = mode:gsub(invalid_chars_pattern, invalid_chars_dict)
+function M.transform_winhl(hl, val, scope)
+  scope = scope:gsub(invalid_chars_pattern, invalid_chars_dict)
 
   -- create binding for hl group
-  local rhs
-
-  if op_prefix and M.is_op(mode) then
-    rhs = hl_op_template:format(hl, mode, op_prefix:gsub(invalid_chars_pattern, invalid_chars_dict))
-  else
-    rhs = hl_mode_template:format(hl, mode)
-  end
+  local rhs = ('Reactive%s%s'):format(hl, scope)
 
   M.set_hl(rhs, val)
 
