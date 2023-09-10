@@ -1,9 +1,17 @@
-# reactive.nvim
+<h1 align="center">reactive.nvim</h1>
+<p align="center"><sup>Reactivity. Right in your neovim.</sup></p>
 
-![Lua](https://img.shields.io/badge/Made%20with%20Lua-blueviolet.svg?style=for-the-badge&logo=lua)
-![Stars](https://img.shields.io/github/stars/rasulomaroff/reactive.nvim?style=for-the-badge)
-![License](https://img.shields.io/github/license/rasulomaroff/reactive.nvim?style=for-the-badge)
-[![Last commit](https://img.shields.io/github/last-commit/ecosse3/nvim?style=for-the-badge)](https://github.com/ecosse3/nvim/commits/master)
+<div align="center">
+  <img src="https://img.shields.io/badge/Made%20with%20Lua-blueviolet.svg?style=for-the-badge&logo=lua">
+  <img src="https://img.shields.io/github/stars/rasulomaroff/reactive.nvim?style=for-the-badge">
+  <img src="https://img.shields.io/github/license/rasulomaroff/reactive.nvim?style=for-the-badge">
+  <img src="https://img.shields.io/github/last-commit/ecosse3/nvim?style=for-the-badge">
+</div>
+
+# WIP
+
+This plugin (its extendable part) is under development. You can use it for building your reactive preset effortlessly and you probably won't notice the development process since the main part of a plugin works fine.
+But if you're a plugin developer and you want to use `reactive` as a dependency or you want to include it as an integration, you can either use existing API now or wait for the final version of it.
 
 ## Features
 
@@ -47,7 +55,8 @@
 Here's a short demo showing built-in presets in action. As you can see, Neovim feels so responsive and snappy when providing a visual feedback of what is going on: 
 
 
-https://github.com/rasulomaroff/reactive.nvim/assets/80093436/a8980a74-b25b-4098-a4c4-a3cc472cb901
+https://github.com/rasulomaroff/reactive.nvim/assets/80093436/3a3d32b9-d63b-4f8e-a1d3-e9f8ca5ea3d0
+
 
 
 > If you watched closely, you could see how `reactive` works with [`telepath.nvim`](https://github.com/rasulomaroff/telepath.nvim). Now you will know which window
