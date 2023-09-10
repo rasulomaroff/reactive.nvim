@@ -3,23 +3,29 @@
 ==============================================================================
 Table of Contents                            *reactive.nvim-table-of-contents*
 
-1. reactive.nvim                                 |reactive.nvim-reactive.nvim|
-  - Features                            |reactive.nvim-reactive.nvim-features|
-  - Table of contents          |reactive.nvim-reactive.nvim-table-of-contents|
-  - Overview                            |reactive.nvim-reactive.nvim-overview|
-  - Status                                |reactive.nvim-reactive.nvim-status|
-  - Getting started              |reactive.nvim-reactive.nvim-getting-started|
-  - Configuration                  |reactive.nvim-reactive.nvim-configuration|
-  - Advanced                            |reactive.nvim-reactive.nvim-advanced|
-  - Extending Reactive        |reactive.nvim-reactive.nvim-extending-reactive|
+1. WIP                                                     |reactive.nvim-wip|
+  - Features                                      |reactive.nvim-wip-features|
+  - Table of contents                    |reactive.nvim-wip-table-of-contents|
+  - Overview                                      |reactive.nvim-wip-overview|
+  - Status                                          |reactive.nvim-wip-status|
+  - Getting started                        |reactive.nvim-wip-getting-started|
+  - Configuration                            |reactive.nvim-wip-configuration|
+  - Advanced                                      |reactive.nvim-wip-advanced|
+  - Extending Reactive                  |reactive.nvim-wip-extending-reactive|
+reactive.nvimReactivity. Right in your neovim.
 
 ==============================================================================
-1. reactive.nvim                                 *reactive.nvim-reactive.nvim*
+1. WIP                                                     *reactive.nvim-wip*
 
-<https://github.com/ecosse3/nvim/commits/master>
+This plugin (its extendable part) is under development. You can use it for
+building your reactive preset effortlessly and you probably won’t notice the
+development process since the main part of a plugin works fine. But if you’re
+a plugin developer and you want to use `reactive` as a dependency or you want
+to include it as an integration, you can either use existing API now or wait
+for the final version of it.
 
 
-FEATURES                                *reactive.nvim-reactive.nvim-features*
+FEATURES                                          *reactive.nvim-wip-features*
 
 - **Performant**`reactive.nvim` uses neovim events to apply highlights (`ModeChanged` for mode changes, `WinEnter`, `WinLeave`, and `BufWinEnter` for coloring active/inactive windows), your input isn’t monitored at all.
 - **Window highlights**apply highlights only for a current window. Utilizes `'winhighlight'` neovim-specific option. (read more |'winhighlight'|).
@@ -33,7 +39,7 @@ FEATURES                                *reactive.nvim-reactive.nvim-features*
 - **Extendable**other plugin creators (especially theme ones) can use `reactive.nvim` to add dynamic highlights to their plugins.
 
 
-TABLE OF CONTENTS              *reactive.nvim-reactive.nvim-table-of-contents*
+TABLE OF CONTENTS                        *reactive.nvim-wip-table-of-contents*
 
 - |reactive.nvim-overview|
 - |reactive.nvim-status|
@@ -54,7 +60,7 @@ TABLE OF CONTENTS              *reactive.nvim-reactive.nvim-table-of-contents*
 - |reactive.nvim-extending-reactive|
 
 
-OVERVIEW                                *reactive.nvim-reactive.nvim-overview*
+OVERVIEW                                          *reactive.nvim-wip-overview*
 
 
   `reactive` is a plugin that brings interactivity in your Neovim experience. It
@@ -68,14 +74,14 @@ Neovim feels so responsive and snappy when providing a visual feedback of what
 is going on:
 
 
-https://github.com/rasulomaroff/reactive.nvim/assets/80093436/a8980a74-b25b-4098-a4c4-a3cc472cb901
+https://github.com/rasulomaroff/reactive.nvim/assets/80093436/3a3d32b9-d63b-4f8e-a1d3-e9f8ca5ea3d0
 
 
   If you watched closely, you could see how `reactive` works with `telepath.nvim`
   <https://github.com/rasulomaroff/telepath.nvim>. Now you will know which window
   you jumped in and what your current operator is.
 
-STATUS                                    *reactive.nvim-reactive.nvim-status*
+STATUS                                              *reactive.nvim-wip-status*
 
 **reactive** is in its early stages and some fields with their values may
 change in favor of convenience in the future, but this should **not** stop you
@@ -85,7 +91,7 @@ cases, they will be marked `deprecated` and you’ll be notified in your Neovim
 console.
 
 
-GETTING STARTED                  *reactive.nvim-reactive.nvim-getting-started*
+GETTING STARTED                            *reactive.nvim-wip-getting-started*
 
 
 REQUIREMENTS ~
@@ -161,7 +167,7 @@ when you want to configure presets that some other plugins added, for example:
 <
 
 
-CONFIGURATION                      *reactive.nvim-reactive.nvim-configuration*
+CONFIGURATION                                *reactive.nvim-wip-configuration*
 
 
 PRESET SPEC ~
@@ -451,7 +457,7 @@ For select modes:
 <
 
 
-ADVANCED                                *reactive.nvim-reactive.nvim-advanced*
+ADVANCED                                          *reactive.nvim-wip-advanced*
 
 
 CUSTOM OPERATORS ~
@@ -656,7 +662,7 @@ specific one, even if they were applied from an operator or an operator
 function._
 
 
-EXTENDING REACTIVE            *reactive.nvim-reactive.nvim-extending-reactive*
+EXTENDING REACTIVE                      *reactive.nvim-wip-extending-reactive*
 
 The process of extending `reactive` is made as straightforward as possible. If
 your plugin wants to use `reactive`, just require it and add your preset.
@@ -687,11 +693,7 @@ Then, if a user wants to configure your preset, they can do that from the
 ==============================================================================
 2. Links                                                 *reactive.nvim-links*
 
-1. *Lua*: https://img.shields.io/badge/Made%20with%20Lua-blueviolet.svg?style=for-the-badge&logo=lua
-2. *Stars*: https://img.shields.io/github/stars/rasulomaroff/reactive.nvim?style=for-the-badge
-3. *License*: https://img.shields.io/github/license/rasulomaroff/reactive.nvim?style=for-the-badge
-4. *Last commit*: https://img.shields.io/github/last-commit/ecosse3/nvim?style=for-the-badge
-5. *Firefox 2023-08-26 at 16-18*: https://github.com/rasulomaroff/reactive.nvim/assets/80093436/2355461f-b271-4532-8055-4213a87c4a74
+1. *Firefox 2023-08-26 at 16-18*: https://github.com/rasulomaroff/reactive.nvim/assets/80093436/2355461f-b271-4532-8055-4213a87c4a74
 
 Generated by panvimdoc <https://github.com/kdheepak/panvimdoc>
 
