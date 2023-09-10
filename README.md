@@ -47,9 +47,10 @@
 Here's a short demo showing built-in presets in action. As you can see, Neovim feels so responsive and snappy when providing a visual feedback of what is going on: 
 
 
-https://github.com/rasulomaroff/reactive.nvim/assets/80093436/7ba3bc78-143c-4daa-b797-16c561b01b3a
+https://github.com/rasulomaroff/reactive.nvim/assets/80093436/a8980a74-b25b-4098-a4c4-a3cc472cb901
 
-> If you watched closely, you could see how `reactive` works with [`flash.nvim`](https://github.com/folke/flash.nvim). Now you will know which window
+
+> If you watched closely, you could see how `reactive` works with [`telepath.nvim`](https://github.com/rasulomaroff/telepath.nvim). Now you will know which window
 > you jumped in and what your current operator is.
 
 ## Status
