@@ -17,6 +17,13 @@ function M.is_op(mode)
   return mode:find 'no' ~= nil
 end
 
+--- Checks if a highlight is applied by this plugin
+---@param hl string
+---@boolean
+function M.is_reactive_hl(hl)
+  return vim.fn.matchstr(hl, [[Reactive.*@\(mode\|static\.\)]]) ~= ''
+end
+
 --- Deeply merges two tables without index/numeric keys
 ---@param to table<any>
 ---@param from table<any>
