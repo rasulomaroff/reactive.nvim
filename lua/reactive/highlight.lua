@@ -24,29 +24,30 @@ function M:apply_winhl(highlights)
 
   local prev_win_winhl = vim.api.nvim_win_get_option(current_window, 'winhighlight')
 
+  local has_reactive_highlights = false
+
   if prev_win_winhl ~= '' then
+    local Util = require 'reactive.util'
+
     for _, from_to in ipairs(vim.split(prev_win_winhl, ',')) do
       local from, to = unpack(vim.split(from_to, ':'))
-      -- we need to check if some other plugin/code hasn't rewritten
-      -- this highlight group value or if this highlight value is from
-      -- the previous mode, in that case we skip it
-      if self.prev_winhl[from] ~= to then
+      -- we shouldn't apply previous reactive highlights since new ones are formed every update
+      if not Util.is_reactive_hl(to) then
         winhl_map[from] = to
+      else
+        has_reactive_highlights = true
       end
     end
+  end
+
   -- if there were no highlights applied before and passed highlights
   -- are empty, then just skip
-  elseif vim.tbl_isempty(highlights) then
-    self.prev_winhl = {}
-
+  if not has_reactive_highlights and vim.tbl_isempty(highlights) then
     return
   end
 
-  self.prev_winhl = {}
-
   for from, to in pairs(highlights) do
     winhl_map[from] = to
-    self.prev_winhl[from] = to
   end
 
   local winhl_str = ''
