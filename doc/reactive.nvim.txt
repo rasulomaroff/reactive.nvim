@@ -1,4 +1,4 @@
-*reactive.nvim.txt*     For Neovim >= 0.7.0     Last change: 2023 September 10
+*reactive.nvim.txt*     For Neovim >= 0.7.0     Last change: 2023 September 17
 
 ==============================================================================
 Table of Contents                            *reactive.nvim-table-of-contents*
@@ -251,7 +251,7 @@ Example:
 
 >lua
     winhl = {
-      StatusLine = { fg = '000000', bg = 'ffffff' }
+      StatusLine = { fg = '#000000', bg = '#ffffff' }
     }
 <
 
@@ -269,7 +269,7 @@ Example:
 
 >lua
     hl = {
-      Cursor = { fg = '00ff00', bg = 'ff00ff' }
+      Cursor = { fg = '#00ff00', bg = '#ff00ff' }
     }
 <
 
@@ -354,10 +354,10 @@ A complete example of a preset can look like the following:
           winhl = {
             -- we use `winhl` because we want to highlight CursorLine only in a current window, not in all of them
             -- if you want to change global highlights, use the `hl` field instead.
-            CursorLine = { bg = '21202e' }
+            CursorLine = { bg = '#21202e' }
           },
           hl = {
-            MyCursor = { bg = 'FFFFFF' }
+            MyCursor = { bg = '#FFFFFF' }
           },
         },
         no = {
@@ -367,28 +367,28 @@ A complete example of a preset can look like the following:
           operators = {
             d = {
               winhl = {
-                CursorLine = { bg = '450a0a' }
+                CursorLine = { bg = '#450a0a' }
               },
               hl = {
-                MyCursor = { bg = 'fca5a5' }
+                MyCursor = { bg = '#fca5a5' }
               }
             },
             y = {
               winhl = {
-                CursorLine = { bg = '422006' },
+                CursorLine = { bg = '#422006' },
               },
               hl = {
-                MyCursor = { bg = 'fdba74' }
+                MyCursor = { bg = '#fdba74' }
               }
             }
           }
         },
         i = {
           winhl = {
-            CursorLine = { bg = '042f2e' }
+            CursorLine = { bg = '#042f2e' }
           },
           hl = {
-            MyCursor = { bg = '5eead4' }
+            MyCursor = { bg = '#5eead4' }
           }
         }
       }
@@ -519,7 +519,7 @@ will look like this:
           -- 's' here is that unique name we passed into the `set_opfunc` method in the mapping 
           s = {
             winhl = {
-              StatusLine = { bg = '5b21b6' }
+              StatusLine = { bg = '#5b21b6' }
             }
           }
         }
