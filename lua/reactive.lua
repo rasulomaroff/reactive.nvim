@@ -13,7 +13,7 @@ function M.setup(config)
   local State = require 'reactive.state'
 
   for name, preset_val in pairs(config.builtin or {}) do
-    local ok, preset = pcall(require, 'reactive.presets.' .. name)
+    local ok, preset = pcall(require, 'reactive.builtin.' .. name)
 
     if not ok then
       vim.notify(
