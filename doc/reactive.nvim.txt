@@ -1,4 +1,4 @@
-*reactive.nvim.txt*     For Neovim >= 0.7.0     Last change: 2023 September 17
+*reactive.nvim.txt*     For Neovim >= 0.7.0     Last change: 2023 September 28
 
 ==============================================================================
 Table of Contents                            *reactive.nvim-table-of-contents*
@@ -337,7 +337,7 @@ This field tells `reactive` to stop propagation of mode highlights. Can be a
 boolean value to stop propagation of highlights completely or a table which
 specifies which highlights should be stopped. So, for example you specified
 `frozen = true` for the `n` (normal) mode, that means that `reactive` won’t
-apply normal mode’s highlights to any further `n` mode, like `no`, `niI`,
+apply normal mode’s highlights to any further `n*` mode, like `no`, `niI`,
 `niR` etc. You can read more about the mode propagation |reactive.nvim-here|.
 
 A complete example of a preset can look like the following:
