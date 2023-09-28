@@ -70,6 +70,11 @@ end
 function M:add_preset(preset)
   vim.validate { name = { preset.name, 'string' } }
 
+  if preset.name:find ' ' then
+    vim.notify('reactive.nvim: whitespaces are not allowed in a preset name', vim.log.levels.ERROR)
+    return
+  end
+
   preset = Preset:parse(preset)
 
   if self.presets[preset.name] then
@@ -101,6 +106,11 @@ end
 ---@param name string
 ---@param preset Reactive.Preset | boolean
 function M:merge_preset_config(name, preset)
+  if name:find ' ' then
+    vim.notify('reactive.nvim: whitespaces are not allowed in a preset name', vim.log.levels.ERROR)
+    return
+  end
+
   if self.preset_configs[name] ~= nil then
     if type(preset) == 'table' then
       self.preset_configs[name] = vim.tbl_deep_extend('force', self.preset_configs[name], Preset:parse(preset))
