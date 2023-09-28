@@ -186,6 +186,8 @@ function M:enable_preset(name)
 
   self.disabled_presets[name] = nil
 
+  self.presets[name].lazy = nil
+
   self:insert_preset_priority(name, self.presets[name].priority)
 end
 
@@ -197,12 +199,23 @@ function M:disable_preset(name)
 
   self.disabled_presets[name] = true
 
+  self.presets[name].lazy = true
+
   for idx, preset_name in ipairs(self.priority_presets) do
     if preset_name == name then
       table.remove(self.priority_presets, idx)
 
       break
     end
+  end
+end
+
+---@param name string
+function M:toggle_preset(name)
+  if self.disabled_presets[name] then
+    self:enable_preset(name)
+  else
+    self:disable_preset(name)
   end
 end
 

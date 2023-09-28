@@ -6,6 +6,7 @@ local M = {
   current_opfunc = nil,
   from = nil,
   to = vim.fn.mode(true),
+  cached_hl = {},
 }
 
 ---@param from string
@@ -203,6 +204,9 @@ local merge_handlers = {
 
       if type(hl_val) == 'table' then
         local rhs = Util.transform_winhl(hl_group, hl_val, scope)
+        -- collecting all transformed highlights so that we can clear them
+        -- if the "ReactiveDisable" autocmd is fired
+        M.cached_hl[rhs] = true
 
         -- update preset itself to contain a binding instead of a table value
         highlights[hl_group] = rhs
@@ -216,6 +220,9 @@ local merge_handlers = {
   hl = function(highlights)
     for hl, val in pairs(highlights) do
       if not M.snapshot.hl[hl] then
+        -- collecting all highlights so that we can clear them
+        -- if the "ReactiveDisable" autocmd is fired
+        M.cached_hl[hl] = true
         M.snapshot.hl[hl] = val
       end
     end
