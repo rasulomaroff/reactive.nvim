@@ -6,7 +6,10 @@ local M = {
   current_opfunc = nil,
   from = nil,
   to = vim.fn.mode(true),
-  cached_hl = {},
+  cache = {
+    applied_hl = {},
+    transformed_winhl = {},
+  },
 }
 
 ---@param from string
@@ -14,6 +17,11 @@ local M = {
 function M:set_modes(from, to)
   self.from = from
   self.to = to
+end
+
+function M:clear_cache()
+  self.cache.applied_hl = {}
+  self.cache.transformed_winhl = {}
 end
 
 --- This function is meant to be used by a user/other plugin creators
@@ -36,7 +44,7 @@ function M:gen(inactive)
       local constraints = {}
 
       if preset.static and not vim.tbl_isempty(preset.static) and not self:process_skip(preset.skip, constraints) then
-        self:form_snapshot({
+        self:form_snapshot(preset.name, {
           winhl = preset.static.winhl and preset.static.winhl.inactive,
           hl = preset.static.hl,
         }, '@static.inactive', constraints)
@@ -92,7 +100,7 @@ function M:gen(inactive)
           return
         end
 
-        self:merge_snapshot(inc_mode, inc_mode_config, scope[preset.name].constraints)
+        self:merge_snapshot(preset.name, inc_mode, inc_mode_config, scope[preset.name].constraints)
 
         if len > 1 and inc_mode_config.exact then
           if type(inc_mode_config.exact) == 'boolean' then
@@ -146,7 +154,7 @@ function M:gen(inactive)
           return
         end
 
-        self:merge_snapshot(inc_mode, inc_mode_config, local_constraints)
+        self:merge_snapshot(preset.name, inc_mode, inc_mode_config, local_constraints)
       end
     end)
   end)
@@ -154,7 +162,7 @@ function M:gen(inactive)
   if has_static then
     State:iterate_presets(function(preset)
       if preset.static and not vim.tbl_isempty(preset.static) then
-        self:form_snapshot({
+        self:form_snapshot(preset.name, {
           winhl = preset.static.winhl and preset.static.winhl.active,
           hl = preset.static.hl,
         }, '@static.active', scope[preset.name].constraints)
@@ -167,10 +175,11 @@ function M:gen(inactive)
   return self.snapshot
 end
 
+---@param preset_name string
 ---@param inc_mode string
 ---@param inc_mode_config Reactive.TriggerConfig
 ---@param constraints TriggerConstraints<boolean>
-function M:merge_snapshot(inc_mode, inc_mode_config, constraints)
+function M:merge_snapshot(preset_name, inc_mode, inc_mode_config, constraints)
   if Util.is_op(inc_mode) and inc_mode_config.operators then
     local op = vim.v.operator
 
@@ -182,38 +191,47 @@ function M:merge_snapshot(inc_mode, inc_mode_config, constraints)
         and inc_mode_config.operators[op].opfuncs[self.current_opfunc]
       then
         self:form_snapshot(
+          preset_name,
           inc_mode_config.operators[op].opfuncs[self.current_opfunc],
           ('@mode.%s.@op.g@.%s'):format(inc_mode, self.current_opfunc),
           constraints
         )
       end
 
-      self:form_snapshot(inc_mode_config.operators[op], ('@mode.%s.@op.%s'):format(inc_mode, op), constraints)
+      self:form_snapshot(
+        preset_name,
+        inc_mode_config.operators[op],
+        ('@mode.%s.@op.%s'):format(inc_mode, op),
+        constraints
+      )
     end
   end
 
-  self:form_snapshot(inc_mode_config, ('@mode.%s'):format(inc_mode), constraints)
+  self:form_snapshot(preset_name, inc_mode_config, ('@mode.%s'):format(inc_mode), constraints)
 end
 
 local merge_handlers = {
-  winhl = function(highlights, scope)
+  winhl = function(highlights, opts)
     Util.each(highlights, function(hl_group, hl_val)
       if M.snapshot.winhl[hl_group] then
         return
       end
 
-      if type(hl_val) == 'table' then
-        local rhs = Util.transform_winhl(hl_group, hl_val, scope)
+      local key = opts.preset_name .. opts.scope .. hl_group
+      local cached_hl = M.cache.transformed_winhl[key]
+
+      if not cached_hl then
+        local rhs = Util.transform_winhl(hl_group, hl_val, opts.scope)
         -- collecting all transformed highlights so that we can clear them
         -- if the "ReactiveDisable" autocmd is fired
-        M.cached_hl[rhs] = true
-
-        -- update preset itself to contain a binding instead of a table value
-        highlights[hl_group] = rhs
+        M.cache.applied_hl[rhs] = true
+        -- since we don't want to transform a highlight group over and over again,
+        -- it's better to cache it once and then extract from the cache
+        M.cache.transformed_winhl[key] = rhs
 
         M.snapshot.winhl[hl_group] = rhs
       else
-        M.snapshot.winhl[hl_group] = hl_val
+        M.snapshot.winhl[hl_group] = cached_hl
       end
     end)
   end,
@@ -222,20 +240,22 @@ local merge_handlers = {
       if not M.snapshot.hl[hl] then
         -- collecting all highlights so that we can clear them
         -- if the "ReactiveDisable" autocmd is fired
-        M.cached_hl[hl] = true
+        M.cache.applied_hl[hl] = true
         M.snapshot.hl[hl] = val
       end
     end
   end,
 }
 
-function M:form_snapshot(highlights, scope, constraints)
+function M:form_snapshot(preset_name, highlights, scope, constraints)
+  local opts = { scope = scope, preset_name = preset_name }
+
   Util.each(merge_handlers, function(value)
     if not highlights[value] or constraints and constraints[value] then
       return
     end
 
-    merge_handlers[value](highlights[value], scope)
+    merge_handlers[value](highlights[value], opts)
   end)
 end
 
