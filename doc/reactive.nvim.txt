@@ -584,7 +584,7 @@ highlights that must be applied now.
 
 **Why**
 
-You’re possible thinking right now: "Why do we ever need it?". Well, because
+You’re possibly thinking right now: "Why do we ever need it?". Well, because
 if you think how modes in Vim/Neovim are implemented, you’ll notice that
 they’re made in a very clever and thoughtful way.
 
