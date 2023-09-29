@@ -482,7 +482,7 @@ that must be applied now.
 
 **Why**
 
-You're possible thinking right now: "Why do we ever need it?". Well, because if you think how modes in Vim/Neovim are implemented, you'll notice that they're made in a very clever and thoughtful
+You're possibly thinking right now: "Why do we ever need it?". Well, because if you think how modes in Vim/Neovim are implemented, you'll notice that they're made in a very clever and thoughtful
 way.
 
 Let's take the `Rv` mode from the example above. Documentation says it is a 'Virtual Replace' mode, triggered by `gR` keys. If you use this mode,
