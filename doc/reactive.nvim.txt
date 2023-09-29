@@ -1,4 +1,4 @@
-*reactive.nvim.txt*     For Neovim >= 0.7.0     Last change: 2023 September 28
+*reactive.nvim.txt*     For Neovim >= 0.7.0     Last change: 2023 September 29
 
 ==============================================================================
 Table of Contents                            *reactive.nvim-table-of-contents*
@@ -651,9 +651,12 @@ Let’s say we have such a config:
     }
 <
 
-The `no`’s mode length is 2, whereas the `n`’s is 1. That means that a
+If the `operator-pending` mode is triggered, which is the equivalent to `no`,
+the `no`’s mode length is 2, whereas the `n`’s is 1. That means that a
 resulted `Snapshot` will contain `WinBar` highlight from the `no` mode and
-`StatusLine` highlight from the `n` mode.
+`StatusLine` highlight from the `n` mode. Thus, `no` is more specific than `n`.
+Highlights from the `n` mode will be applied just because the `no` mode has `n`
+letter at the first character.
 
 
 PRIORITY
