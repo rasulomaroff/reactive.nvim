@@ -531,8 +531,8 @@ modes = {
 }
 ```
 
-The `no`'s mode length is 2, whereas the `n`'s is 1. That means that a resulted `Snapshot` will contain `WinBar` highlight from the `no` mode and `StatusLine` highlight
-from the `n` mode.
+If the `operator-pending` mode is triggered, which is the equivalent to `no`, the `no`'s mode length is 2, whereas the `n`'s is 1. That means that a resulted `Snapshot` will contain `WinBar` highlight from the `no` mode and `StatusLine` highlight
+from the `n` mode. Thus, `no` is more specific than `n`. Highlights from the `n` mode will be applied just because the `no` mode has `n` letter at the first character.
 
 #### Priority
 
