@@ -59,7 +59,7 @@ function M:init()
 
         Snapshot:set_modes(from, to)
 
-        Highlight:apply(Snapshot:gen())
+        Highlight:apply(Snapshot:gen { callbacks = true })
       end,
     })
 
@@ -77,7 +77,7 @@ function M:init()
       group = group,
       desc = 'Reactive: applies inactive window highlights',
       callback = function()
-        Highlight:apply(Snapshot:gen(true))
+        Highlight:apply(Snapshot:gen { inactive_win = true })
       end,
     })
   end

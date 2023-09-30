@@ -31,19 +31,23 @@ function M:set_opfunc(opfunc)
   self.current_opfunc = opfunc
 end
 
----@param inactive? boolean
+---@param opts? { inactive_win?: boolean, callbacks?: boolean }
 ---@return table<any>
-function M:gen(inactive)
+function M:gen(opts)
   local State = require 'reactive.state'
 
   self.snapshot = { winhl = {}, hl = {} }
 
   -- if we're leaving a window, then we just color that window with `inactive` colors, if present
-  if inactive then
+  if opts and opts.inactive_win then
     State:iterate_presets(function(preset)
       local constraints = {}
 
-      if preset.static and not vim.tbl_isempty(preset.static) and not self:process_skip(preset.skip, constraints) then
+      if
+        preset.static
+        and not vim.tbl_isempty(preset.static)
+        and not self:process_constraints(preset.skip, constraints)
+      then
         self:form_snapshot(preset.name, {
           winhl = preset.static.winhl and preset.static.winhl.inactive,
           hl = preset.static.hl,
@@ -94,7 +98,7 @@ function M:gen(inactive)
         end
 
         -- we check `skip` method/table only on a first iteration
-        if self:process_skip(preset.skip, scope[preset.name].constraints) then
+        if self:process_constraints(preset.skip, scope[preset.name].constraints) then
           dropped_presets[preset.name] = true
 
           return
@@ -159,13 +163,43 @@ function M:gen(inactive)
     end)
   end)
 
-  if has_static then
+  if has_static or (opts and opts.callbacks) then
     State:iterate_presets(function(preset)
       if preset.static and not vim.tbl_isempty(preset.static) then
         self:form_snapshot(preset.name, {
           winhl = preset.static.winhl and preset.static.winhl.active,
           hl = preset.static.hl,
         }, '@static.active', scope[preset.name].constraints)
+      end
+
+      if
+        not opts
+        or not opts.callbacks
+        or not preset.modes
+        or scope[preset.name].constraints.callbacks
+        or dropped_presets[preset.name]
+      then
+        return
+      end
+
+      if preset.modes[self.from] then
+        if preset.modes[self.from].from then
+          preset.modes[self.from].from(self.from, self.to)
+        end
+
+        if preset.modes[self.from].on then
+          preset.modes[self.from].on(self.from, self.to)
+        end
+      end
+
+      if preset.modes[self.to] then
+        if preset.modes[self.to].to then
+          preset.modes[self.to].to(self.from, self.to)
+        end
+
+        if preset.modes[self.to].on then
+          preset.modes[self.to].on(self.from, self.to)
+        end
       end
     end)
   end
@@ -262,7 +296,7 @@ end
 ---@param skip table | fun(): boolean
 ---@param constraints? table<string, boolean>
 ---@return boolean is_dropped
-function M:process_skip(skip, constraints)
+function M:process_constraints(skip, constraints)
   if type(skip) == 'function' then
     return skip()
   end
@@ -273,7 +307,7 @@ function M:process_skip(skip, constraints)
 
   local escaped = true
 
-  for _, field in ipairs(shape_fields) do
+  for _, field in ipairs { 'winhl', 'hl', 'callbacks' } do
     if skip[field] and skip[field]() then
       if constraints then
         constraints[field] = true
