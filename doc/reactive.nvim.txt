@@ -1,4 +1,4 @@
-*reactive.nvim.txt*     For Neovim >= 0.7.0     Last change: 2023 September 30
+*reactive.nvim.txt*      For Neovim >= 0.7.0      Last change: 2023 October 02
 
 ==============================================================================
 Table of Contents                            *reactive.nvim-table-of-contents*
