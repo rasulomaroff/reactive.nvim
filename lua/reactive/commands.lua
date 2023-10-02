@@ -65,19 +65,13 @@ function M:init()
 
     -- We need BufWinEnter event to successfully handle cases where you open a window
     -- then through telescope go to another one and then go back through Ctrl + o
-    aucmd({ 'WinEnter', 'BufWinEnter' }, {
+    aucmd({ 'WinEnter', 'BufWinEnter', 'WinLeave' }, {
       group = group,
-      desc = 'Reactive: applies active window highlights',
-      callback = function()
-        Highlight:apply(Snapshot:gen())
-      end,
-    })
-
-    aucmd('WinLeave', {
-      group = group,
-      desc = 'Reactive: applies inactive window highlights',
-      callback = function()
-        Highlight:apply(Snapshot:gen { inactive_win = true })
+      desc = 'Reactive: applies active/inactive window highlights',
+      callback = function(opts)
+        Highlight:apply(Snapshot:gen {
+          inactive_win = opts.event == 'WinLeave',
+        })
       end,
     })
 
