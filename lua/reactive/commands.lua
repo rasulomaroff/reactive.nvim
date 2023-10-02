@@ -80,6 +80,14 @@ function M:init()
         Highlight:apply(Snapshot:gen { inactive_win = true })
       end,
     })
+
+    aucmd('ColorSchemePre', {
+      group = group,
+      desc = 'Reactive: removes cached highlights',
+      callback = function()
+        Snapshot:clear_cache()
+      end,
+    })
   end
 
   local function clear_listeners()
