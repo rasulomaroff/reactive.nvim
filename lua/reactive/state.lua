@@ -3,11 +3,11 @@ local Util = require 'reactive.util'
 
 ---@class TriggerConstraints<V>: { winhl?: V, hl?: V }
 
----@class Reactive.TriggerConfig
+---@class Reactive.ModeConfig
 ---@field winhl? table<string, string | table<string, any>>
 ---@field hl? table<string, table<string, any>>
----@field operators? table<string, Reactive.TriggerConfig>
----@field opfuncs? table<string, Reactive.TriggerConfig>
+---@field operators? table<string, Reactive.ModeConfig>
+---@field opfuncs? table<string, Reactive.ModeConfig>
 ---@field exact? boolean | TriggerConstraints<boolean>
 ---@field frozen? boolean | TriggerConstraints<boolean>
 ---@field from? fun(modes: { from: string, to: string })
@@ -18,7 +18,7 @@ local Util = require 'reactive.util'
 ---@field lazy? boolean
 ---@field priority? number
 ---@field skip? TriggerConstraints<fun(): boolean> | fun(): boolean
----@field modes table<string | table<string>, Reactive.TriggerConfig>
+---@field modes table<string | table<string>, Reactive.ModeConfig>
 ---@field static? table<string, table>
 ---@field init? fun(preset: Reactive.Preset)
 

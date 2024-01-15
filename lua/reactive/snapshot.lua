@@ -205,7 +205,7 @@ end
 
 ---@param preset_name string
 ---@param inc_mode string
----@param inc_mode_config Reactive.TriggerConfig
+---@param inc_mode_config Reactive.ModeConfig
 ---@param constraints TriggerConstraints<boolean>
 function M:merge_snapshot(preset_name, inc_mode, inc_mode_config, constraints)
   if Util.is_op(inc_mode) and inc_mode_config.operators then
