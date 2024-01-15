@@ -1,7 +1,7 @@
 local Preset = require 'reactive.preset'
 local Util = require 'reactive.util'
 
----@class TriggerConstraints<V>: { winhl?: V, hl?: V, callbacks?: V }
+---@class TriggerConstraints<V>: { winhl?: V, hl?: V }
 
 ---@class Reactive.TriggerConfig
 ---@field winhl? table<string, string | table<string, any>>
@@ -10,9 +10,8 @@ local Util = require 'reactive.util'
 ---@field opfuncs? table<string, Reactive.TriggerConfig>
 ---@field exact? boolean | TriggerConstraints<boolean>
 ---@field frozen? boolean | TriggerConstraints<boolean>
----@field from? fun(from: string, to: string)
----@field to? fun(from: string, to: string)
----@field on? fun(from: string, to: string)
+---@field from? fun(modes: { from: string, to: string })
+---@field to? fun(modes: { from: string, to: string })
 
 ---@class Reactive.Preset
 ---@field name string

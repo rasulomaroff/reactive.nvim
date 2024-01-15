@@ -38,7 +38,7 @@ function M:gen(opts)
 
   self.snapshot = { winhl = {}, hl = {} }
 
-  -- if we're leaving a window, then we just color that window with `inactive` colors, if present
+  -- if we're leaving a window, then we just color that window with `inactive` colors, if presented
   if opts and opts.inactive_win then
     State:iterate_presets(function(preset)
       local constraints = {}
@@ -172,34 +172,28 @@ function M:gen(opts)
         }, '@static.active', scope[preset.name].constraints)
       end
 
-      if
-        not opts
-        or not opts.callbacks
-        or not preset.modes
-        or scope[preset.name].constraints.callbacks
-        or dropped_presets[preset.name]
-      then
+      if not opts or not opts.callbacks or not preset.modes or dropped_presets[preset.name] then
         return
       end
 
       if preset.modes[self.from] then
         if preset.modes[self.from].from then
-          preset.modes[self.from].from(self.from, self.to)
+          preset.modes[self.from].from { from = self.from, to = self.to }
         end
 
-        if preset.modes[self.from].on then
-          preset.modes[self.from].on(self.from, self.to)
-        end
+        -- if preset.modes[self.from].on then
+        --   preset.modes[self.from].on { from = self.from, to = self.to }
+        -- end
       end
 
       if preset.modes[self.to] then
         if preset.modes[self.to].to then
-          preset.modes[self.to].to(self.from, self.to)
+          preset.modes[self.to].to { from = self.from, to = self.to }
         end
 
-        if preset.modes[self.to].on then
-          preset.modes[self.to].on(self.from, self.to)
-        end
+        -- if preset.modes[self.to].on then
+        --   preset.modes[self.to].on { from = self.from, to = self.to }
+        -- end
       end
     end)
   end
@@ -307,7 +301,7 @@ function M:process_constraints(skip, constraints)
 
   local escaped = true
 
-  for _, field in ipairs { 'winhl', 'hl', 'callbacks' } do
+  for _, field in ipairs { 'winhl', 'hl' } do
     if skip[field] and skip[field]() then
       if constraints then
         constraints[field] = true
