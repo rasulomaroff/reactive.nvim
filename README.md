@@ -37,12 +37,12 @@ But if you're a plugin developer and you want to use `reactive` as a dependency 
   - [Commands](#commands)
 - [Configuration](#configuration)
   - [Preset Spec](#preset-spec)
-  - [TriggerConfig Spec](#triggerconfig-spec)
+  - [ModeConfig Spec](#modeconfig-spec)
   - [StaticConfig Spec](#staticconfig-spec)
   - [Shortcuts](#shortcuts)
 - [Advanced](#advanced)
   - [Custom operators](#custom-operators)
-  - [Shared trigger configs](#shared-trigger-configs)
+  - [Shared mode configs](#shared-mode-configs)
   - [Mode propagation](#mode-propagation)
   - [Specificity and priority](#specificity-and-priority)
 - [Extending Reactive](#extending-reactive)
@@ -158,10 +158,8 @@ Only 2 fields are required: `name` and `modes`.
 | priority  | `number`                                                              | You can set a priority of any preset, if you faced conflicting preset highlights, for example. It's not recommended to set this field, if you are a plugin developer.                                                                                                                   |
 | skip      | `fun(): boolean` or `{ winhl?: fun(): boolean, hl?: fun(): boolean }` | This function will be called on every mode change, so that you can define when your preset shouldn't be applied. It should return true, if you want to skip applying highlights. You can also pass a table with functions, if you want to disable only window highlights or highlights. |
 | init      | `fun()`                                                               | This function will be called once when a preset inits.                                                                                                                                                                                                                                  |
-| modes     | `table<string, TriggerConfig>`                                        | This is a table where a key is a mode (check `:h mode()` for understanding all the modes Neovim has), and a value is a `TriggerConfig` specification.                                                                                                                                   |
+| modes     | `table<string, ModeConfig>`                                           | This is a table where a key is a mode (check `:h mode()` for understanding all the modes Neovim has), and a value is a `ModeConfig` specification.                                                                                                                                      |
 | static    | `StaticConfig`                                                        | Static highlights are applied when there're no such highlights in the `modes` field.                                                                                                                                                                                                    |
-| operators | `table<string, TriggerConfig>`                                        | A table where a key is an operator (check `:h operator` to see all existing operators), and a value is a `TriggerConfig` specification.                                                                                                                                                 |
-| opfuncs   | `table<string, TriggerConfig>`                                        | **Experimental**. A table where a key is a name of a custom operator (check [custom operators](#custom-operators) to understand how to configure them), and a value is a `TriggerConfig` specification.                                                                                 |
 
 **Example of a preset:**
 
@@ -182,9 +180,20 @@ local my_preset = {
 }
 ```
 
-### TriggerConfig Spec
+### ModeConfig Spec
 
-Trigger config is a table, containing following field and values:
+Mode config is a table, containing following field and values:
+
+| Property  | Type                                                                       |
+|-----------|----------------------------------------------------------------------------|
+| winhl     | `table<string, table>`                                                     |
+| hl        | `table<string, table>`                                                     |
+| operators | `table<string, ModeConfig>` - but without `operators` field                |
+| opfuncs   | `table<string, ModeConfig>` - but without `operators` and `opfuncs` fields |
+| exact     | `boolean` or `{ winhl?: boolean, hl?: boolean }`                           |
+| frozen    | `boolean` or `{ winhl?: boolean, hl?: boolean }`                           |
+| from      | `fun(modes: { from: string, to: string })`                                 |
+| to        | `fun(modes: { from: string, to: string })`                                 |
 
 #### winhl
 type: `table<string, table>`
@@ -215,13 +224,13 @@ hl = {
 ```
 
 #### operators
-type: `TriggerConfig`
+type: `ModeConfig`
 
 > [!NOTE]
 > This field can only be used inside operator-pending modes, like `no`, `nov`, `noV`, and `no\x16`.
 
-This field allows you to configure operators as you configure modes. This is a table where a key is an operator ('d', 'y' or any other valid one),
-and a value is a `TriggerConfig` spec. Highlights that you specify in this table will be prioritized over those from `modes`.
+This field allows you to configure operators as you configure modes. This is a table where a key is an operator ('d', 'y' or any other valid one, check `:h operator` to see all existing operators),
+and a value is a `ModeConfig` spec. Highlights that you specify in this table will be prioritized over those from `modes`.
 
 Example:
 
@@ -237,13 +246,51 @@ operators = {
 ```
 
 #### opfuncs
-type: `TriggerConfig`
+type: `ModeConfig`
 
 > [!NOTE]
-> This field can only be used inside the `g@` operator.
+> This field can only be used inside the `g@` operator and is **experimental**.
 
 You can apply highlights depending on your custom operators. Spec here will be the same as in the `modes` and `operator` fields.
 Read more about using custom operators [here](#custom-operators).
+
+#### from
+type: `fun(modes: { from: string, to: string })`
+
+> [!NOTE]
+> This field can only be used inside modes, not inside operators/opfuncs.
+
+A callback that will be executed when neovim goes into another mode **from** this one.
+
+Example:
+
+```lua
+modes = {
+  i = {
+    from = function(modes)
+      -- callback that will be executed every time you leave an insert mode
+    end
+  }
+}
+```
+
+#### to
+type: `fun(modes: { from: string, to: string })`
+
+> [!NOTE]
+> This field can only be used inside modes, not inside operators/opfuncs.
+
+A callback that will be executed when neovim goes **into** this mode.
+
+```lua
+modes = {
+  n = {
+    to = function(modes)
+      -- callback that will be executed every time you enter a normal mode
+    end
+  }
+}
+```
 
 #### exact
 type: `boolean` or `{ winhl?: boolean, hl?: boolean }`
@@ -441,7 +488,7 @@ operators = {
 }
 ```
 
-### Shared trigger configs
+### Shared mode configs
 
 You can apply the same config for several modes at once by specifying a key as an array. This also works for operators and operator functions (opfuncs).
 Example:
@@ -450,17 +497,17 @@ Example:
 {
   modes = {
     [{ 'n', 'i', 'v' }] = {
-      -- shared trigger config for a normal, insert and visual mode
+      -- shared mode config for a normal, insert and visual mode
     },
     no = {
       operators = {
         [{ 'd', 'c' }] = {
-          -- shared trigger config for delete and change operators
+          -- shared mode config for delete and change operators
         },
         ['g@'] = {
           opfuncs = {
             [{ 'firstoperator', 'secondoperator' }] = {
-              -- shared trigger config for your custom operators
+              -- shared mode config for your custom operators
             }
           }
         }
