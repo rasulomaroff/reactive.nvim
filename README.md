@@ -608,6 +608,26 @@ require('reactive').add_preset {
 }
 ```
 
+Alternatively, you can create your preset file at `reactive/presets/yourpresetname.lua` and then load it:
+
+
+1) Put your preset into a file, eg `reactive/presets/test.lua`
+
+```lua
+return {
+  name = 'test', -- should be the same as the file name
+  -- other fields
+  -- do not forget about `lazy` field, if you want to delegate your preset activation to a user
+}
+```
+
+2) Load it from any other file that's executed:
+
+```lua
+require('reactive').load_preset 'test'
+```
+
+
 Then, if a user wants to configure your preset, they can do that from the `setup` function:
 
 ```lua
