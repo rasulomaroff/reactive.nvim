@@ -1,4 +1,4 @@
-*reactive.nvim.txt*      For Neovim >= 0.7.0      Last change: 2024 January 15
+*reactive.nvim.txt*      For Neovim >= 0.7.0      Last change: 2024 January 20
 
 ==============================================================================
 Table of Contents                            *reactive.nvim-table-of-contents*
@@ -743,6 +743,25 @@ your plugin wants to use `reactive`, just require it and add your preset.
       -- other fields
       -- do not forget about `lazy` field, if you want to delegate your preset activation to a user
     }
+<
+
+Alternatively, you can create your preset file at
+`reactive/presets/yourpresetname.lua` and then load it:
+
+1. Put your preset into a file, eg `reactive/presets/test.lua`
+
+>lua
+    return {
+      name = 'test', -- should be the same as the file name
+      -- other fields
+      -- do not forget about `lazy` field, if you want to delegate your preset activation to a user
+    }
+<
+
+1. Load it from any other file that’s executed:
+
+>lua
+    require('reactive').load_preset 'test'
 <
 
 Then, if a user wants to configure your preset, they can do that from the
