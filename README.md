@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Made%20with%20Lua-blueviolet.svg?style=for-the-badge&logo=lua">
   <img src="https://img.shields.io/github/stars/rasulomaroff/reactive.nvim?style=for-the-badge">
   <img src="https://img.shields.io/github/license/rasulomaroff/reactive.nvim?style=for-the-badge">
-  <img src="https://img.shields.io/github/last-commit/ecosse3/nvim?style=for-the-badge">
+  <img src="https://img.shields.io/github/last-commit/rasulomaroff/reactive.nvim?style=for-the-badge">
 </div>
 
 # WIP
