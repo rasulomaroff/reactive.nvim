@@ -39,6 +39,9 @@ M.commands = {
 M.cached_presets = {}
 
 function M:init()
+  local Highlight = require 'reactive.highlight'
+  local Snapshot = require 'reactive.snapshot'
+
   local function init_listeners()
     if self.listeners_initialized then
       return
@@ -46,9 +49,6 @@ function M:init()
     self.listeners_initialized = true
 
     local group = api.nvim_create_augroup('reactive.nvim', { clear = true })
-
-    local Highlight = require 'reactive.highlight'
-    local Snapshot = require 'reactive.snapshot'
 
     aucmd('ModeChanged', {
       group = group,
@@ -92,8 +92,6 @@ function M:init()
 
     vim.api.nvim_del_augroup_by_name 'reactive.nvim'
 
-    local Snapshot = require 'reactive.snapshot'
-
     for hl in pairs(Snapshot.cache.applied_hl) do
       vim.cmd('highlight clear ' .. hl)
     end
@@ -123,6 +121,8 @@ function M:init()
       vim.notify('reactive.nvim: There\'s no such a preset: ' .. val, vim.log.levels.ERROR)
     else
       self.commands[cmd](val)
+
+      Highlight:apply(Snapshot:gen())
     end
   end, {
     complete = function(_, line)
