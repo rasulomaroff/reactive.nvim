@@ -191,7 +191,7 @@ CONFIGURATION                                *reactive.nvim-wip-configuration*
 
 PRESET SPEC ~
 
-Only 2 fields are required: `name` and `modes`.
+The `name` field is required.
 
   -------------------------------------------------------------------------------------------------------------------
   Property   Type                                              Description
