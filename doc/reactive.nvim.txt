@@ -70,9 +70,29 @@ OVERVIEW                                          *reactive.nvim-wip-overview*
   `reactive` as a dependency, you can make your plugin (especially if it’s a
   colortheme) much more reactive and more pleasant to use. Read
   |reactive.nvim-extending-reactive| for more on that.
-Here’s a short demo showing built-in presets in action. As you can see,
-Neovim feels so responsive and snappy when providing a visual feedback of what
-is going on.
+
+DEMOS ~
+
+
+CHANGING COLORS WHEN MODES ARE SWITCHED:
+
+
+https://github.com/rasulomaroff/reactive.nvim/assets/80093436/d9699ef3-c33d-436c-9fd8-1e181f36866b
+
+
+CHANGING COLORS WHEN OPERATORS ARE TRIGGERED:
+
+
+https://github.com/rasulomaroff/reactive.nvim/assets/80093436/1c9fd0ee-307d-4d2c-a4b4-b36e8c1654c2
+
+
+CHANGING COLORS OF ACTIVE & INACTIVE WINDOWS:
+
+
+https://github.com/rasulomaroff/reactive.nvim/assets/80093436/5cac055e-e613-487f-b7c2-04c88465df35
+
+
+ALL TOGETHER:
 
 You can see how a cursor color and a cursor line color change when I switch
 modes/operators: Green for "insert" mode, blue for "change" operator, red for
