@@ -82,7 +82,7 @@ function M:add_preset(preset)
   if self.presets[preset.name] then
     self:update_preset(preset)
   else
-    vim.validate { modes = { preset.modes, 'table' } }
+    -- vim.validate { modes = { preset.modes, 'table' } }
 
     self:init_preset(preset)
   end

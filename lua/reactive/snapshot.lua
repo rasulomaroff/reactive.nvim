@@ -71,6 +71,10 @@ function M:gen(opts)
 
   Util.iterate_mode_reverse(mode, function(inc_mode, len)
     return State:iterate_presets(function(preset)
+      if not preset.modes then
+        return
+      end
+
       if presets_len == vim.tbl_count(dropped_presets) then
         -- all presets are dropped, break the loop
         return true
@@ -169,7 +173,7 @@ function M:gen(opts)
         self:form_snapshot(preset.name, {
           winhl = preset.static.winhl and preset.static.winhl.active,
           hl = preset.static.hl,
-        }, '@static.active', scope[preset.name].constraints)
+        }, '@static.active', scope[preset.name] and scope[preset.name].constraints or {})
       end
 
       if not opts or not opts.callbacks or not preset.modes or dropped_presets[preset.name] then
