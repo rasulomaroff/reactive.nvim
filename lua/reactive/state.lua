@@ -160,7 +160,7 @@ end
 ---@param preset Reactive.Preset
 function M:init_preset(preset)
   if self.preset_configs[preset.name] then
-    preset = vim.tbl_deep_extend('force', self.preset_configs[preset.name], preset)
+    preset = vim.tbl_deep_extend('force', preset, self.preset_configs[preset.name])
     -- we no longer need a config since we already applied it
     self.preset_configs[preset.name] = nil
   end
