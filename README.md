@@ -8,11 +8,6 @@
   <img src="https://img.shields.io/github/last-commit/rasulomaroff/reactive.nvim?style=for-the-badge">
 </div>
 
-# WIP
-
-This plugin (its extendable part) is under development. You can use it for building your reactive preset effortlessly and you probably won't notice the development process since the main part of a plugin works fine.
-But if you're a plugin developer and you want to use `reactive` as a dependency or you want to include it as an integration, you can either use existing API now or wait for the final version of it.
-
 ## Features
 
 - **Performant**: `reactive.nvim` uses neovim events to apply highlights (`ModeChanged` for mode changes, `WinEnter`, `WinLeave`, and `BufWinEnter` for coloring active/inactive windows), your input isn't monitored at all.
@@ -36,11 +31,13 @@ But if you're a plugin developer and you want to use `reactive` as a dependency 
   - [Usage](#usage)
   - [Commands](#commands)
 - [Configuration](#configuration)
+  - [Config Spec](#config-spec)
   - [Preset Spec](#preset-spec)
   - [ModeConfig Spec](#modeconfig-spec)
   - [StaticConfig Spec](#staticconfig-spec)
   - [Shortcuts](#shortcuts)
 - [Advanced](#advanced)
+  - [Loading presets](#loading-presets)
   - [Custom operators](#custom-operators)
   - [Shared mode configs](#shared-mode-configs)
   - [Mode propagation](#mode-propagation)
@@ -97,8 +94,6 @@ they will be marked `deprecated` and you'll be notified in your Neovim console.
 ### Requirements
 Neovim version: `>= 0.7.0`
 
-I would appreciate it if someone points from which version neovim supports both `'winhighlight'` option and `ModeChanged` event.
-
 ### Installation
 
 - With [`lazy.nvim`](https://github.com/folke/lazy.nvim): 
@@ -113,7 +108,8 @@ use { 'rasulomaroff/reactive.nvim' }
 
 ### Usage
 
-To quickly understand what you can do with this plugin, just use built-in presets, but I encourage you to build your preset and not rely on built-in ones, which can be changed in the future:
+To quickly understand what you can do with this plugin, just use built-in presets, but I encourage you to build your preset and not rely on built-in ones, which can be changed in the future.
+For the full spec look [here](#config-spec).
 
 ```lua
 require('reactive').setup {
@@ -125,7 +121,7 @@ require('reactive').setup {
 }
 ```
 
-Alternatively, you can add your own preset:
+Alternatively, you can add your own [preset](#preset-spec):
 
 ```lua
 require('reactive').add_preset {
@@ -134,7 +130,8 @@ require('reactive').add_preset {
 ```
 
 You don't need to call the `setup` function to initialize `reactive`. It will be initialized as soon as you require it.
-The `setup` function is only needed when you want to configure presets that some other plugins added, for example:
+The `setup` function is only needed when you want to configure presets that some other plugins added or load their presets.
+For the full spec look [here](#config-spec).
 
 ```lua
 require('reactive').setup {
@@ -157,9 +154,18 @@ require('reactive').setup {
 }
 ```
 
+Loading presets that you or other plugin authors added to the folder (`reactive/presets/yourpresetname.lua`).
+More on that [here](#loading-presets)
+
+```lua
+require('reactive').setup {
+  load = { 'yourpresetname' } -- you can also use a string
+}
+```
+
 ### Commands
 
-Reactive has following commands you can use:
+Reactive has the following commands you can use:
 
 1. `ReactiveStart` - starts `reactive` by initializing listeners, such as events on `ModeChanged`, `WinEnter` etc.
 2. `ReactiveStop` - removes listeners.
@@ -169,6 +175,16 @@ Reactive has following commands you can use:
 6. `Reactive toggle <preset>` - toggles selected preset.
 
 ## Configuration
+
+### Config Spec
+
+This is a table you're passing to the `setup` method.
+
+| Property | Type                               | Description                                                                                                                                                                                                                                                                      |
+|----------|------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| builtin  | `table<string, boolean \| Preset>` | This field is there for demonstration purposes, but you can actually use it if the colors meet your needs. The key is a preset name and a value is either a boolean or a table of preset fields you want to overwrite. Take a look at the [Preset Spec](#preset-spec).           |
+| configs  | `table<string, boolean \| Preset>` | The key is a preset name. You can enable lazy presets here by passing `true` as a value or disable some by passing `false`. You can also customize a preset by passing a table with fields you want to overwrite. Take a look at the [Preset Spec](#preset-spec).                |
+| load     | `string` or `table<string>`        | This is a shortcut for the `load_preset` method which allows you to load presets from the `reactive/presets/` directory. You can either put a name of a preset to this field or pass a table with preset names that should be loaded. Read about it [here](#loading-presets).    |
 
 ### Preset Spec
 
@@ -449,6 +465,45 @@ modes = {
 
 ## Advanced
 
+### Loading presets
+
+> If you're a plugin developer, please read [this](#extending-reactive).
+> Want to load a preset from other plugin? - Proceed to the 3rd step.
+
+If you don't want to use the `add_preset` method for some reasons, for example your preset is giant or you have several ones, then it is completely fine. For that reason there's a more clean way to do it:
+
+1. Create a file(s) with a desired preset name(s) inside `reactive/presets/yourpresetname.lua` directory. You should put this directory where Neovim will be able to access it. The best way to it is just
+to put it inside your `lua/` directory so the full path will look like this `lua/reactive/presets/yourpresetname.lua`.
+2. Return a [preset](#preset-spec) from that file.
+
+`lua/reactive/presets/statusline.lua`
+```lua
+return {
+  name = 'statusline', -- this field is required and should match your file name
+  modes = {
+    i = {
+      hl = {
+        StatusLine = {}
+      }
+    }
+  }
+}
+```
+
+3. Load this preset either using the `setup` method or the `load_preset` method.
+
+```lua
+require('reactive').setup {
+  load = 'statusline' -- you can also use a table if you want to load several presets like that { 'statusline', 'another' }
+}
+```
+
+or
+
+```lua
+require('reactive').load_preset 'statusline'
+```
+
 ### Custom operators
 
 > [!IMPORTANT]
@@ -639,6 +694,12 @@ Alternatively, you can create your preset file at `reactive/presets/yourpresetna
 ```lua
 return {
   name = 'test', -- should be the same as the file name
+  modes = {
+    i = {
+      winhl = {},
+      hl = {}
+    }
+  },
   -- other fields
   -- do not forget about `lazy` field, if you want to delegate your preset activation to a user
 }
