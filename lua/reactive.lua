@@ -1,6 +1,6 @@
 ---@class Reactive.Config
 ---@field builtin? table<string, boolean | table<string, any>>
----@field preset_configs? table<string, boolean | table<string, any>>
+---@field configs? table<string, boolean | table<string, any>>
 ---@field load? table<string> | string
 
 local M = {}
@@ -30,8 +30,8 @@ function M.setup(config)
     end
   end
 
-  if config.preset_configs and not vim.tbl_isempty(config.preset_configs) then
-    State:set_configs(config.preset_configs)
+  if config.configs and not vim.tbl_isempty(config.configs) then
+    State:set_configs(config.configs)
   end
 
   if config.load then
