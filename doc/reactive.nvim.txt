@@ -3,29 +3,17 @@
 ==============================================================================
 Table of Contents                            *reactive.nvim-table-of-contents*
 
-1. WIP                                                     |reactive.nvim-wip|
-  - Features                                      |reactive.nvim-wip-features|
-  - Table of contents                    |reactive.nvim-wip-table-of-contents|
-  - Overview                                      |reactive.nvim-wip-overview|
-  - Status                                          |reactive.nvim-wip-status|
-  - Getting started                        |reactive.nvim-wip-getting-started|
-  - Configuration                            |reactive.nvim-wip-configuration|
-  - Advanced                                      |reactive.nvim-wip-advanced|
-  - Extending Reactive                  |reactive.nvim-wip-extending-reactive|
+  - Features                                          |reactive.nvim-features|
+  - Table of contents                        |reactive.nvim-table-of-contents|
+  - Overview                                          |reactive.nvim-overview|
+  - Status                                              |reactive.nvim-status|
+  - Getting started                            |reactive.nvim-getting-started|
+  - Configuration                                |reactive.nvim-configuration|
+  - Advanced                                          |reactive.nvim-advanced|
+  - Extending Reactive                      |reactive.nvim-extending-reactive|
 reactive.nvimReactivity. Right in your neovim.
 
-==============================================================================
-1. WIP                                                     *reactive.nvim-wip*
-
-This plugin (its extendable part) is under development. You can use it for
-building your reactive preset effortlessly and you probably won’t notice the
-development process since the main part of a plugin works fine. But if you’re
-a plugin developer and you want to use `reactive` as a dependency or you want
-to include it as an integration, you can either use existing API now or wait
-for the final version of it.
-
-
-FEATURES                                          *reactive.nvim-wip-features*
+FEATURES                                              *reactive.nvim-features*
 
 - **Performant**`reactive.nvim` uses neovim events to apply highlights (`ModeChanged` for mode changes, `WinEnter`, `WinLeave`, and `BufWinEnter` for coloring active/inactive windows), your input isn’t monitored at all.
 - **Window highlights**apply highlights only for a current window. Utilizes `'winhighlight'` neovim-specific option. (read more |'winhighlight'|).
@@ -39,7 +27,7 @@ FEATURES                                          *reactive.nvim-wip-features*
 - **Extendable**other plugin creators (especially theme ones) can use `reactive.nvim` to add dynamic highlights to their plugins.
 
 
-TABLE OF CONTENTS                        *reactive.nvim-wip-table-of-contents*
+TABLE OF CONTENTS                            *reactive.nvim-table-of-contents*
 
 - |reactive.nvim-overview|
 - |reactive.nvim-status|
@@ -49,11 +37,13 @@ TABLE OF CONTENTS                        *reactive.nvim-wip-table-of-contents*
     - |reactive.nvim-usage|
     - |reactive.nvim-commands|
 - |reactive.nvim-configuration|
+    - |reactive.nvim-config-spec|
     - |reactive.nvim-preset-spec|
     - |reactive.nvim-modeconfig-spec|
     - |reactive.nvim-staticconfig-spec|
     - |reactive.nvim-shortcuts|
 - |reactive.nvim-advanced|
+    - |reactive.nvim-loading-presets|
     - |reactive.nvim-custom-operators|
     - |reactive.nvim-shared-mode-configs|
     - |reactive.nvim-mode-propagation|
@@ -61,7 +51,7 @@ TABLE OF CONTENTS                        *reactive.nvim-wip-table-of-contents*
 - |reactive.nvim-extending-reactive|
 
 
-OVERVIEW                                          *reactive.nvim-wip-overview*
+OVERVIEW                                              *reactive.nvim-overview*
 
 
   `reactive` is a plugin that brings interactivity in your Neovim experience. It
@@ -108,7 +98,7 @@ https://github.com/rasulomaroff/reactive.nvim/assets/80093436/3a3d32b9-d63b-4f8e
   <https://github.com/rasulomaroff/telepath.nvim>. Now you will know which window
   you jumped in and what your current operator is.
 
-STATUS                                              *reactive.nvim-wip-status*
+STATUS                                                  *reactive.nvim-status*
 
 **reactive** is in its early stages and some fields with their values may
 change in favor of convenience in the future, but this should **not** stop you
@@ -118,15 +108,12 @@ cases, they will be marked `deprecated` and you’ll be notified in your Neovim
 console.
 
 
-GETTING STARTED                            *reactive.nvim-wip-getting-started*
+GETTING STARTED                                *reactive.nvim-getting-started*
 
 
 REQUIREMENTS ~
 
 Neovim version: `>= 0.7.0`
-
-I would appreciate it if someone points from which version neovim supports both
-`'winhighlight'` option and `ModeChanged` event.
 
 
 INSTALLATION ~
@@ -148,7 +135,8 @@ USAGE ~
 
 To quickly understand what you can do with this plugin, just use built-in
 presets, but I encourage you to build your preset and not rely on built-in
-ones, which can be changed in the future:
+ones, which can be changed in the future. For the full spec look
+|reactive.nvim-here|.
 
 >lua
     require('reactive').setup {
@@ -160,7 +148,7 @@ ones, which can be changed in the future:
     }
 <
 
-Alternatively, you can add your own preset:
+Alternatively, you can add your own |reactive.nvim-preset|
 
 >lua
     require('reactive').add_preset {
@@ -168,9 +156,10 @@ Alternatively, you can add your own preset:
     }
 <
 
-You don’t need to call the `setup` function to initialize `reactive`. It will
+Youdon’t need to call the `setup` function to initialize `reactive`. It will
 be initialized as soon as you require it. The `setup` function is only needed
-when you want to configure presets that some other plugins added, for example:
+when you want to configure presets that some other plugins added or load their
+presets. For the full spec look |reactive.nvim-here|.
 
 >lua
     require('reactive').setup {
@@ -193,10 +182,19 @@ when you want to configure presets that some other plugins added, for example:
     }
 <
 
+Loading presets that you or other plugin authors added to the folder
+(`reactive/presets/yourpresetname.lua`). More on that |reactive.nvim-here|
+
+>lua
+    require('reactive').setup {
+      load = { 'yourpresetname' } -- you can also use a string
+    }
+<
+
 
 COMMANDS ~
 
-Reactive has following commands you can use:
+Reactive has the following commands you can use:
 
 1. `ReactiveStart` - starts `reactive` by initializing listeners, such as events on `ModeChanged`, `WinEnter` etc.
 2. `ReactiveStop` - removes listeners.
@@ -206,8 +204,34 @@ Reactive has following commands you can use:
 6. `Reactive toggle <preset>` - toggles selected preset.
 
 
-CONFIGURATION                                *reactive.nvim-wip-configuration*
+CONFIGURATION                                    *reactive.nvim-configuration*
 
+
+CONFIG SPEC ~
+
+This is a table you’re passing to the `setup` method.
+
+  ----------------------------------------------------------------------------------------------------------
+  Property   Type                               Description
+  ---------- ---------------------------------- ------------------------------------------------------------
+  builtin    table<string, boolean \| Preset>   This field is there for demonstration purposes, but you can
+                                                actually use it if the colors meet your needs. The key is a
+                                                preset name and a value is either a boolean or a table of
+                                                preset fields you want to overwrite. Take a look at the
+                                                Preset Spec.
+
+  configs    table<string, boolean \| Preset>   The key is a preset name. You can enable lazy presets here
+                                                by passing true as a value or disable some by passing false.
+                                                You can also customize a preset by passing a table with
+                                                fields you want to overwrite. Take a look at the Preset
+                                                Spec.
+
+  load       string or table<string>            This is a shortcut for the load_preset method which allows
+                                                you to load presets from the reactive/presets/ directory.
+                                                You can either put a name of a preset to this field or pass
+                                                a table with preset names that should be loaded. Read about
+                                                it here.
+  ----------------------------------------------------------------------------------------------------------
 
 PRESET SPEC ~
 
@@ -550,7 +574,50 @@ For select modes:
 <
 
 
-ADVANCED                                          *reactive.nvim-wip-advanced*
+ADVANCED                                              *reactive.nvim-advanced*
+
+
+LOADING PRESETS ~
+
+
+  If you’re a plugin developer, please read |reactive.nvim-this|. Want to load
+  a preset from other plugin? - Proceed to the 3rd step.
+If you don’t want to use the `add_preset` method for some reasons, for
+example your preset is giant or you have several ones, then it is completely
+fine. For that reason there’s a more clean way to do it:
+
+1. Create a file(s) with a desired preset name(s) inside `reactive/presets/yourpresetname.lua` directory. You should put this directory where Neovim will be able to access it. The best way to it is just
+to put it inside your `lua/` directory so the full path will look like this `lua/reactive/presets/yourpresetname.lua`.
+2. Return a |reactive.nvim-preset| from that file.
+
+`lua/reactive/presets/statusline.lua`
+
+>lua
+    return {
+      name = 'statusline', -- this field is required and should match your file name
+      modes = {
+        i = {
+          hl = {
+            StatusLine = {}
+          }
+        }
+      }
+    }
+<
+
+1. Load this preset either using the `setup` method or the `load_preset` method.
+
+>lua
+    require('reactive').setup {
+      load = 'statusline' -- you can also use a table if you want to load several presets like that { 'statusline', 'another' }
+    }
+<
+
+or
+
+>lua
+    require('reactive').load_preset 'statusline'
+<
 
 
 CUSTOM OPERATORS ~
@@ -758,7 +825,7 @@ specific one, even if they were applied from an operator or an operator
 function._
 
 
-EXTENDING REACTIVE                      *reactive.nvim-wip-extending-reactive*
+EXTENDING REACTIVE                          *reactive.nvim-extending-reactive*
 
 The process of extending `reactive` is made as straightforward as possible. If
 your plugin wants to use `reactive`, just require it and add your preset.
@@ -779,6 +846,12 @@ Alternatively, you can create your preset file at
 >lua
     return {
       name = 'test', -- should be the same as the file name
+      modes = {
+        i = {
+          winhl = {},
+          hl = {}
+        }
+      },
       -- other fields
       -- do not forget about `lazy` field, if you want to delegate your preset activation to a user
     }
@@ -806,7 +879,7 @@ Then, if a user wants to configure your preset, they can do that from the
 <
 
 ==============================================================================
-2. Links                                                 *reactive.nvim-links*
+1. Links                                                 *reactive.nvim-links*
 
 1. *Firefox 2023-08-26 at 16-18*: https://github.com/rasulomaroff/reactive.nvim/assets/80093436/2355461f-b271-4532-8055-4213a87c4a74
 
