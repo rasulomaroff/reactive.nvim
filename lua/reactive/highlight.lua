@@ -1,6 +1,4 @@
 local M = {
-  ---@type table<string, string>
-  prev_winhl = {},
   ---@type table<string, table<string, any>>
   prev_highlights = {},
 }
