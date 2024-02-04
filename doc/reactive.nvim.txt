@@ -4,7 +4,7 @@
 Table of Contents                            *reactive.nvim-table-of-contents*
 
   - Features                                          |reactive.nvim-features|
-  - Table of contents                        |reactive.nvim-table-of-contents|
+  - Contents                                          |reactive.nvim-contents|
   - Overview                                          |reactive.nvim-overview|
   - Status                                              |reactive.nvim-status|
   - Getting started                            |reactive.nvim-getting-started|
@@ -27,7 +27,7 @@ FEATURES                                              *reactive.nvim-features*
 - **Extendable**other plugin creators (especially theme ones) can use `reactive.nvim` to add dynamic highlights to their plugins.
 
 
-TABLE OF CONTENTS                            *reactive.nvim-table-of-contents*
+CONTENTS                                              *reactive.nvim-contents*
 
 - |reactive.nvim-overview|
 - |reactive.nvim-status|
