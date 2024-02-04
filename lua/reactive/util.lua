@@ -10,6 +10,28 @@ function M.clear_hl(hl)
   return vim.cmd('hi clear ' .. hl)
 end
 
+--- Returns winhighlight option value
+---@param win number?
+function M.get_winhl(win)
+  return vim.api.nvim_win_get_option(win or 0, 'winhighlight')
+end
+
+--- Sets winhighlight option
+---@param val string
+---@param win number?
+function M.set_winhl(val, win)
+  return vim.api.nvim_win_set_option(win or 0, 'winhighlight', val)
+end
+
+--- Iterates through winhighlight entries
+---@param winhighlight string
+---@param fn fun(from: string, to: string)
+function M.each_winhl(winhighlight, fn)
+  M.eachi(vim.split(winhighlight, ','), function(from_to)
+    fn(unpack(vim.split(from_to, ':')))
+  end)
+end
+
 --- Checks if a mode is operator-pending
 ---@param mode string
 ---@return boolean is_op_mode

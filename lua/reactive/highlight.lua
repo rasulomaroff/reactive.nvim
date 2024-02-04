@@ -16,26 +16,21 @@ end
 
 ---@param highlights table<string, string>
 function M:apply_winhl(highlights)
+  local Util = require 'reactive.util'
   local current_window = vim.api.nvim_get_current_win()
-
   local winhl_map = {}
-
-  local prev_win_winhl = vim.api.nvim_win_get_option(current_window, 'winhighlight')
-
+  local prev_win_winhl = Util.get_winhl(current_window)
   local has_reactive_highlights = false
 
   if prev_win_winhl ~= '' then
-    local Util = require 'reactive.util'
-
-    for _, from_to in ipairs(vim.split(prev_win_winhl, ',')) do
-      local from, to = unpack(vim.split(from_to, ':'))
+    Util.each_winhl(prev_win_winhl, function(from, to)
       -- we shouldn't apply previous reactive highlights since new ones are formed every update
       if not Util.is_reactive_hl(to) then
         winhl_map[from] = to
       else
         has_reactive_highlights = true
       end
-    end
+    end)
   end
 
   -- if there were no highlights applied before and passed highlights
@@ -58,7 +53,7 @@ function M:apply_winhl(highlights)
   ---@type string
   winhl_str = winhl_str:sub(1, winhl_str:len() - 1)
 
-  vim.api.nvim_win_set_option(current_window, 'winhighlight', winhl_str)
+  Util.set_winhl(winhl_str, current_window)
 end
 
 ---@param highlights table<string, table<string, any>>
