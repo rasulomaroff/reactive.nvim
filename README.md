@@ -21,7 +21,7 @@
 - **Custom operators**: you can even apply highlights on your custom operators! Always wanted to highlight a cursor line (or whatever), when using a specific external plugin's operator? Now it's possible.
 - **Extendable**: other plugin creators (especially theme ones) can use `reactive.nvim` to add dynamic highlights to their plugins.
 
-## Table of contents
+## Contents
 
 - [Overview](#overview)
 - [Status](#status)
