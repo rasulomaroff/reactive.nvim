@@ -104,6 +104,7 @@ function M:init()
       callback = function()
         Snapshot:clear_cache()
         clear_winhighlight_options()
+        Highlight:sync()
       end,
     })
 
@@ -145,14 +146,6 @@ function M:init()
       vim.notify('reactive.nvim: There\'s no such a preset: ' .. val, vim.log.levels.ERROR)
     else
       self.commands[cmd](val)
-
-      local snap = Snapshot:gen()
-
-      Highlight:apply {
-        hl = snap.hl,
-        winhl = snap.winhl,
-        winid = api.nvim_get_current_win(),
-      }
     end
   end, {
     complete = function(_, line)

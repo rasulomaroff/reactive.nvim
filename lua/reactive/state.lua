@@ -177,6 +177,7 @@ function M:init_preset(preset)
 
   -- WARN: this function should be called AFTER assigning a preset to `self.presets` table
   self:insert_preset_priority(preset.name, preset.priority)
+  require('reactive.highlight'):sync()
 end
 
 ---@param a string
@@ -201,6 +202,7 @@ function M:enable_preset(name)
   self.presets[name].lazy = nil
 
   self:insert_preset_priority(name, self.presets[name].priority)
+  require('reactive.highlight'):sync()
 end
 
 ---@param name string
@@ -220,6 +222,7 @@ function M:disable_preset(name)
       break
     end
   end
+  require('reactive.highlight'):sync()
 end
 
 ---@param name string
