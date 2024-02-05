@@ -41,6 +41,7 @@ M.cached_presets = {}
 function M:init()
   local Highlight = require 'reactive.highlight'
   local Snapshot = require 'reactive.snapshot'
+  local Util = require 'reactive.util'
 
   local function init_plugin()
     if self.listeners_initialized then
@@ -58,8 +59,13 @@ function M:init()
         local from, to = unpack(vim.split(opts.match, ':'))
 
         Snapshot:set_modes(from, to)
+        local snap = Snapshot:gen { callbacks = true }
 
-        Highlight:apply(Snapshot:gen { callbacks = true })
+        Highlight:apply {
+          hl = snap.hl,
+          winhl = snap.winhl,
+          winid = api.nvim_get_current_win(),
+        }
       end,
     })
 
@@ -69,9 +75,13 @@ function M:init()
       group = group,
       desc = 'Reactive: applies active/inactive window highlights',
       callback = function(opts)
-        Highlight:apply(Snapshot:gen {
-          inactive_win = opts.event == 'WinLeave',
-        })
+        local snap = Snapshot:gen { inactive_win = opts.event == 'WinLeave' }
+
+        Highlight:apply {
+          hl = snap.hl,
+          winhl = snap.winhl,
+          winid = api.nvim_get_current_win(),
+        }
       end,
     })
 
@@ -86,7 +96,6 @@ function M:init()
 
   local function clear_winhighlight_options()
     local windows = vim.api.nvim_list_wins()
-    local Util = require 'reactive.util'
 
     Util.eachi(windows, function(win)
       Util.delete_reactive_winhl(win)
@@ -135,7 +144,13 @@ function M:init()
     else
       self.commands[cmd](val)
 
-      Highlight:apply(Snapshot:gen())
+      local snap = Snapshot:gen()
+
+      Highlight:apply {
+        hl = snap.hl,
+        winhl = snap.winhl,
+        winid = api.nvim_get_current_win(),
+      }
     end
   end, {
     complete = function(_, line)
@@ -145,7 +160,6 @@ function M:init()
         -- we only do this once
         if cmd[1] == '' then
           local State = require 'reactive.state'
-          local Util = require 'reactive.util'
 
           self.cached_presets.toggle = {}
           self.cached_presets.enable = {}

@@ -3,9 +3,9 @@ local M = {
   prev_highlights = {},
 }
 
----@param opts { winhl?: table<string, string>, hl?: table<string, table<string, any>> }
+---@param opts { winid: number, winhl?: table<string, string>, hl?: table<string, table<string, any>> }
 function M:apply(opts)
-  self:apply_winhl(opts.winhl)
+  self:apply_winhl(opts.winhl, opts.winid)
   self:apply_hl(opts.hl)
 
   -- redraw pending screen updates
@@ -15,11 +15,11 @@ function M:apply(opts)
 end
 
 ---@param highlights table<string, string>
-function M:apply_winhl(highlights)
+---@param winid number
+function M:apply_winhl(highlights, winid)
   local Util = require 'reactive.util'
-  local current_window = vim.api.nvim_get_current_win()
   local winhl_map = {}
-  local prev_win_winhl = Util.get_winhl(current_window)
+  local prev_win_winhl = Util.get_winhl(winid)
   local has_reactive_highlights = false
 
   if prev_win_winhl ~= '' then
@@ -53,7 +53,7 @@ function M:apply_winhl(highlights)
   ---@type string
   winhl_str = winhl_str:sub(1, winhl_str:len() - 1)
 
-  Util.set_winhl(winhl_str, current_window)
+  Util.set_winhl(winhl_str, winid)
 end
 
 ---@param highlights table<string, table<string, any>>

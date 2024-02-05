@@ -32,7 +32,7 @@ function M:set_opfunc(opfunc)
 end
 
 ---@param opts? { inactive_win?: boolean, callbacks?: boolean }
----@return table<any>
+---@return { winhl: table<string, string>, hl: table<string, table> }
 function M:gen(opts)
   local State = require 'reactive.state'
 
@@ -279,6 +279,10 @@ local merge_handlers = {
   end,
 }
 
+---@param preset_name string
+---@param highlights table<string, table> | fun(): table<string, table>
+---@param scope string
+---@param constraints TriggerConstraints
 function M:form_snapshot(preset_name, highlights, scope, constraints)
   local opts = { scope = scope, preset_name = preset_name }
 
