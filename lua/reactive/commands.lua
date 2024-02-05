@@ -92,6 +92,21 @@ function M:init()
         Snapshot:clear_cache()
       end,
     })
+
+    local windows = api.nvim_list_wins()
+    local current_win = api.nvim_get_current_win()
+
+    Util.eachi(windows, function(win)
+      local snap = Snapshot:gen {
+        inactive_win = current_win ~= win,
+      }
+
+      Highlight:apply {
+        hl = snap.hl,
+        winhl = snap.winhl,
+        winid = win,
+      }
+    end)
   end
 
   local function clear_winhighlight_options()
