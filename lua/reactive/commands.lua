@@ -42,6 +42,19 @@ function M:init()
   local Highlight = require 'reactive.highlight'
   local Snapshot = require 'reactive.snapshot'
   local Util = require 'reactive.util'
+  local function clear_winhighlight_options()
+    local windows = vim.api.nvim_list_wins()
+
+    Util.eachi(windows, function(win)
+      Util.delete_reactive_winhl(win)
+    end)
+  end
+
+  local function clear_highlights()
+    for hl in pairs(Snapshot.cache.applied_hl) do
+      vim.cmd('highlight clear ' .. hl)
+    end
+  end
 
   local function init_plugin()
     if self.listeners_initialized then
@@ -90,37 +103,11 @@ function M:init()
       desc = 'Reactive: removes cached highlights',
       callback = function()
         Snapshot:clear_cache()
+        clear_winhighlight_options()
       end,
     })
 
-    local windows = api.nvim_list_wins()
-    local current_win = api.nvim_get_current_win()
-
-    Util.eachi(windows, function(win)
-      local snap = Snapshot:gen {
-        inactive_win = current_win ~= win,
-      }
-
-      Highlight:apply {
-        hl = snap.hl,
-        winhl = snap.winhl,
-        winid = win,
-      }
-    end)
-  end
-
-  local function clear_winhighlight_options()
-    local windows = vim.api.nvim_list_wins()
-
-    Util.eachi(windows, function(win)
-      Util.delete_reactive_winhl(win)
-    end)
-  end
-
-  local function clear_highlights()
-    for hl in pairs(Snapshot.cache.applied_hl) do
-      vim.cmd('highlight clear ' .. hl)
-    end
+    Highlight:sync()
   end
 
   local function stop_plugin()

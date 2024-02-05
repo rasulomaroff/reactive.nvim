@@ -90,4 +90,21 @@ function M:apply_hl(highlights)
   end
 end
 
+function M:sync()
+  local windows = vim.api.nvim_list_wins()
+  local current_win = vim.api.nvim_get_current_win()
+  local Util = require 'reactive.util'
+  local Snapshot = require 'reactive.snapshot'
+
+  Util.eachi(windows, function(win)
+    local snap = Snapshot:gen { inactive_win = current_win ~= win }
+
+    self:apply {
+      hl = snap.hl,
+      winhl = snap.winhl,
+      winid = win,
+    }
+  end)
+end
+
 return M
