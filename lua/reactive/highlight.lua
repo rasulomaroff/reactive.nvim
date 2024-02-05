@@ -3,10 +3,10 @@ local M = {
   prev_highlights = {},
 }
 
----@param opts { winid: number, winhl?: table<string, string>, hl?: table<string, table<string, any>> }
+---@param opts { winid: number, winhl?: table<string, string>, hl?: table<string, table<string, any>>, forced?: boolean }
 function M:apply(opts)
   self:apply_winhl(opts.winhl, opts.winid)
-  self:apply_hl(opts.hl)
+  self:apply_hl(opts.hl, opts.forced)
 
   -- redraw pending screen updates
   -- without this command some highlights won't be applied immediately
@@ -57,9 +57,10 @@ function M:apply_winhl(highlights, winid)
 end
 
 ---@param highlights table<string, table<string, any>>
-function M:apply_hl(highlights)
+---@param forced? boolean
+function M:apply_hl(highlights, forced)
   -- no sense in making the same work twice
-  if vim.deep_equal(self.prev_highlights, highlights or {}) then
+  if not forced and vim.deep_equal(self.prev_highlights, highlights or {}) then
     return
   end
 
@@ -91,19 +92,30 @@ function M:apply_hl(highlights)
 end
 
 function M:sync()
-  local windows = vim.api.nvim_list_wins()
-  local current_win = vim.api.nvim_get_current_win()
   local Util = require 'reactive.util'
   local Snapshot = require 'reactive.snapshot'
+  local windows = vim.api.nvim_list_wins()
+  local current_win = vim.api.nvim_get_current_win()
+  local current_win_snap = Snapshot:gen()
+
+  -- we'll only apply global highlights once as it makes no sense to do it
+  -- several times
+  self:apply {
+    hl = current_win_snap.hl,
+    winhl = current_win_snap.winhl,
+    winid = current_win,
+    -- whenever we 'sync' colors, we should forcely apply new highlights even though there
+    -- could be the same highlight groups that had been applied before
+    forced = true,
+  }
 
   Util.eachi(windows, function(win)
-    local snap = Snapshot:gen { inactive_win = current_win ~= win }
+    if win == current_win then
+      return
+    end
 
-    self:apply {
-      hl = snap.hl,
-      winhl = snap.winhl,
-      winid = win,
-    }
+    local snap = Snapshot:gen { inactive_win = true }
+    self:apply_winhl(snap.winhl, win)
   end)
 end
 
