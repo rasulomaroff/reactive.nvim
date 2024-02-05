@@ -23,6 +23,27 @@ function M.set_winhl(val, win)
   return vim.api.nvim_win_set_option(win or 0, 'winhighlight', val)
 end
 
+--- Deletes window highlights applied by reactive.nvim
+---@param win number
+function M.delete_reactive_winhl(win)
+  local winhl = M.get_winhl(win)
+
+  if winhl == '' then
+    return
+  end
+
+  local clear_winhl = {}
+
+  M.each_winhl(winhl, function(from, to)
+    -- we only leave those highlights not from reactive.nvim
+    if not M.is_reactive_hl(to) then
+      clear_winhl[from] = to
+    end
+  end)
+
+  M.set_winhl(table.concat(clear_winhl, ','), win)
+end
+
 --- Iterates through winhighlight entries
 ---@param winhighlight string
 ---@param fn fun(from: string, to: string)

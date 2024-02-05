@@ -42,7 +42,7 @@ function M:init()
   local Highlight = require 'reactive.highlight'
   local Snapshot = require 'reactive.snapshot'
 
-  local function init_listeners()
+  local function init_plugin()
     if self.listeners_initialized then
       return
     end
@@ -84,33 +84,46 @@ function M:init()
     })
   end
 
-  local function clear_listeners()
+  local function clear_winhighlight_options()
+    local windows = vim.api.nvim_list_wins()
+    local Util = require 'reactive.util'
+
+    Util.eachi(windows, function(win)
+      Util.delete_reactive_winhl(win)
+    end)
+  end
+
+  local function clear_highlights()
+    for hl in pairs(Snapshot.cache.applied_hl) do
+      vim.cmd('highlight clear ' .. hl)
+    end
+  end
+
+  local function stop_plugin()
     if not self.listeners_initialized then
       return
     end
     self.listeners_initialized = nil
 
+    -- clear listeners
     vim.api.nvim_del_augroup_by_name 'reactive.nvim'
-
-    for hl in pairs(Snapshot.cache.applied_hl) do
-      vim.cmd('highlight clear ' .. hl)
-    end
-
     Snapshot:clear_cache()
+    clear_highlights()
+    clear_winhighlight_options()
   end
 
   local function toggle_listeners()
     if self.listeners_initialized then
-      clear_listeners()
+      stop_plugin()
     else
-      init_listeners()
+      init_plugin()
     end
   end
 
-  init_listeners()
+  init_plugin()
 
-  user_cmd('ReactiveStart', init_listeners, {})
-  user_cmd('ReactiveStop', clear_listeners, {})
+  user_cmd('ReactiveStart', init_plugin, {})
+  user_cmd('ReactiveStop', stop_plugin, {})
   user_cmd('ReactiveToggle', toggle_listeners, {})
   user_cmd('Reactive', function(opts)
     local cmd, val = unpack(vim.split(vim.trim(opts.args), '%s+'))
