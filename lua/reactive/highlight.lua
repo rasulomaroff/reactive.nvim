@@ -5,17 +5,21 @@ local M = {
 
 ---@param opts { winid: number, winhl?: table<string, string>, hl?: table<string, table<string, any>>, forced?: boolean }
 function M:apply(opts)
-  self:apply_winhl(opts.winhl, opts.winid)
-  self:apply_hl(opts.hl, opts.forced)
+  local skip_winhl = self:apply_winhl(opts.winhl, opts.winid)
+  local skip_hl = self:apply_hl(opts.hl, opts.forced)
 
   -- redraw pending screen updates
   -- without this command some highlights won't be applied immediately
   -- or till the next "redraw" caused by nvim itself
-  vim.cmd [[ redraw ]]
+  -- but we won't redraw if it's not forced or there're no highlights applied or changed
+  if not skip_winhl or not skip_hl or opts.forced then
+    vim.cmd.redraw()
+  end
 end
 
 ---@param highlights table<string, string>
 ---@param winid number
+---@return boolean skip_winhl
 function M:apply_winhl(highlights, winid)
   local Util = require 'reactive.util'
   local winhl_map = {}
@@ -36,7 +40,7 @@ function M:apply_winhl(highlights, winid)
   -- if there were no highlights applied before and passed highlights
   -- are empty, then just skip
   if not has_reactive_highlights and vim.tbl_isempty(highlights) then
-    return
+    return true
   end
 
   for from, to in pairs(highlights) do
@@ -54,14 +58,17 @@ function M:apply_winhl(highlights, winid)
   winhl_str = winhl_str:sub(1, winhl_str:len() - 1)
 
   Util.set_winhl(winhl_str, winid)
+
+  return false
 end
 
 ---@param highlights table<string, table<string, any>>
 ---@param forced? boolean
+---@return boolean skip_hl
 function M:apply_hl(highlights, forced)
   -- no sense in making the same work twice
   if not forced and vim.deep_equal(self.prev_highlights, highlights or {}) then
-    return
+    return true
   end
 
   local Util = require 'reactive.util'
@@ -72,23 +79,26 @@ function M:apply_hl(highlights, forced)
     end
 
     self.prev_highlights = {}
-  else
-    local new_highlights = {}
 
-    for hl, val in pairs(highlights) do
-      Util.set_hl(hl, val)
-
-      new_highlights[hl] = true
-      self.prev_highlights[hl] = nil
-    end
-
-    -- clear old highlights
-    for hl, _ in pairs(self.prev_highlights) do
-      Util.clear_hl(hl)
-    end
-
-    self.prev_highlights = new_highlights
+    return false
   end
+
+  local new_highlights = {}
+
+  for hl, val in pairs(highlights) do
+    Util.set_hl(hl, val)
+
+    new_highlights[hl] = true
+    self.prev_highlights[hl] = nil
+  end
+
+  -- clear old highlights
+  for hl, _ in pairs(self.prev_highlights) do
+    Util.clear_hl(hl)
+  end
+
+  self.prev_highlights = new_highlights
+  return false
 end
 
 function M:sync()
@@ -96,8 +106,17 @@ function M:sync()
   local Snapshot = require 'reactive.snapshot'
   local windows = vim.api.nvim_list_wins()
   local current_win = vim.api.nvim_get_current_win()
-  local current_win_snap = Snapshot:gen()
 
+  Util.eachi(windows, function(win)
+    if win == current_win then
+      return
+    end
+
+    local snap = Snapshot:gen { inactive_win = true }
+    self:apply_winhl(snap.winhl, win)
+  end)
+
+  local current_win_snap = Snapshot:gen()
   -- we'll only apply global highlights once as it makes no sense to do it
   -- several times
   self:apply {
@@ -108,15 +127,6 @@ function M:sync()
     -- could be the same highlight groups that had been applied before
     forced = true,
   }
-
-  Util.eachi(windows, function(win)
-    if win == current_win then
-      return
-    end
-
-    local snap = Snapshot:gen { inactive_win = true }
-    self:apply_winhl(snap.winhl, win)
-  end)
 end
 
 return M
