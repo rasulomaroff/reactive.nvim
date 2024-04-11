@@ -284,7 +284,10 @@ local merge_handlers = {
 ---@param scope string
 ---@param constraints TriggerConstraints
 function M:form_snapshot(preset_name, highlights, scope, constraints)
-  local opts = { scope = scope, preset_name = preset_name }
+  local opts = {
+    scope = string.format('@preset.%s.%s', preset_name, scope),
+    preset_name = preset_name,
+  }
 
   Util.each(merge_handlers, function(value)
     if not highlights[value] or constraints and constraints[value] then
