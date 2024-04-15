@@ -94,7 +94,7 @@ function M:gen(opts)
 
       local inc_mode_config = preset.modes[inc_mode]
 
-      if dropped_presets[preset.name] or not inc_mode_config then
+      if dropped_presets[preset.name] then
         return
       end
 
@@ -107,6 +107,10 @@ function M:gen(opts)
         if self:process_constraints(preset.skip, scope[preset.name].constraints) then
           dropped_presets[preset.name] = true
 
+          return
+        end
+
+        if not inc_mode_config then
           return
         end
 
@@ -132,6 +136,9 @@ function M:gen(opts)
           end
         end
       else
+        if not inc_mode_config then
+          return
+        end
         -- we shouldn't mutate original constraints
         local local_constraints = vim.deepcopy(scope[preset.name].constraints)
 
