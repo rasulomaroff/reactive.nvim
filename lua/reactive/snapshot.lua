@@ -70,6 +70,8 @@ function M:gen(opts)
   local has_static = false
 
   Util.iterate_mode_reverse(mode, function(inc_mode, len)
+    local is_original_mode = len == mode_len
+
     return State:iterate_presets(function(preset)
       if not preset.modes then
         return
@@ -96,7 +98,7 @@ function M:gen(opts)
         return
       end
 
-      if len == mode_len then
+      if is_original_mode then
         if preset.static and not vim.tbl_isempty(preset.static) then
           has_static = true
         end
