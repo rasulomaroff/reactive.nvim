@@ -1,4 +1,4 @@
-*reactive.nvim.txt*       For Neovim >= 0.7.0       Last change: 2024 March 24
+*reactive.nvim.txt*       For Neovim >= 0.7.0       Last change: 2024 April 15
 
 ==============================================================================
 Table of Contents                            *reactive.nvim-table-of-contents*
@@ -11,6 +11,7 @@ Table of Contents                            *reactive.nvim-table-of-contents*
   - Configuration                                |reactive.nvim-configuration|
   - Advanced                                          |reactive.nvim-advanced|
   - Extending Reactive                      |reactive.nvim-extending-reactive|
+1. Links                                                 |reactive.nvim-links|
 reactive.nvimReactivity. Right in your neovim.
 
 FEATURES                                              *reactive.nvim-features*
