@@ -254,11 +254,13 @@ end
 local merge_handlers = {
   winhl = function(highlights, opts)
     Util.each(highlights, function(hl_group, hl_val)
+      -- if a group is already applied, then we won't overwrite it
+      -- meaning that it had a higher priority
       if M.snapshot.winhl[hl_group] then
         return
       end
 
-      local key = opts.preset_name .. opts.scope .. hl_group
+      local key = opts.scope .. hl_group
       local cached_hl = M.cache.transformed_winhl[key]
 
       if not cached_hl then
@@ -266,9 +268,12 @@ local merge_handlers = {
         -- collecting all transformed highlights so that we can clear them
         -- if the "ReactiveDisable" autocmd is fired
         M.cache.applied_hl[rhs] = true
-        -- since we don't want to transform a highlight group over and over again,
+        -- since we don't want to transform a highlight group and set a highlight value over and over again,
         -- it's better to cache it once and then extract from the cache
-        M.cache.transformed_winhl[key] = rhs
+        -- but we won't cache it if this highlight is dynamic
+        if not opts.nocache then
+          M.cache.transformed_winhl[key] = rhs
+        end
 
         M.snapshot.winhl[hl_group] = rhs
       else
@@ -303,7 +308,17 @@ function M:form_snapshot(preset_name, highlights, scope, constraints)
       return
     end
 
-    merge_handlers[value](highlights[value], opts)
+    local highlight_values = highlights[value]
+
+    -- highlights can be passed as a funtion and thus be dynamic
+    -- in that case we won't cache their values in the `winhl` option
+    -- because they can always be different
+    if type(highlights[value]) == 'function' then
+      opts.nocache = true
+      highlight_values = highlights[value]()
+    end
+
+    merge_handlers[value](highlight_values, opts)
   end)
 end
 
