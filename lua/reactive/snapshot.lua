@@ -48,10 +48,15 @@ function M:gen(opts)
         and not vim.tbl_isempty(preset.static)
         and not self:process_constraints(preset.skip, constraints)
       then
-        self:form_snapshot(preset.name, {
-          winhl = preset.static.winhl and preset.static.winhl.inactive,
-          hl = preset.static.hl,
-        }, '@static.inactive', constraints)
+        self:form {
+          preset_name = preset.name,
+          highlights = {
+            winhl = preset.static.winhl and preset.static.winhl.inactive,
+            hl = preset.static.hl,
+          },
+          scope = '@static.inactive',
+          constraints = constraints,
+        }
       end
     end)
 
@@ -114,7 +119,12 @@ function M:gen(opts)
           return
         end
 
-        self:merge_snapshot(preset.name, inc_mode, inc_mode_config, scope[preset.name].constraints)
+        self:merge {
+          preset_name = preset.name,
+          inc_mode = inc_mode,
+          inc_mode_config = inc_mode_config,
+          constraints = scope[preset.name].constraints,
+        }
 
         if len > 1 and inc_mode_config.exact then
           if type(inc_mode_config.exact) == 'boolean' then
@@ -171,7 +181,12 @@ function M:gen(opts)
           return
         end
 
-        self:merge_snapshot(preset.name, inc_mode, inc_mode_config, local_constraints)
+        self:merge {
+          preset_name = preset.name,
+          inc_mode = inc_mode,
+          inc_mode_config = inc_mode_config,
+          constraints = local_constraints,
+        }
       end
     end)
   end)
@@ -179,10 +194,12 @@ function M:gen(opts)
   if has_static or (opts and opts.callbacks) then
     State:iterate_presets(function(preset)
       if preset.static and not vim.tbl_isempty(preset.static) then
-        self:form_snapshot(preset.name, {
-          winhl = preset.static.winhl and preset.static.winhl.active,
-          hl = preset.static.hl,
-        }, '@static.active', scope[preset.name] and scope[preset.name].constraints or {})
+        self:form {
+          preset_name = preset.name,
+          highlights = { winhl = preset.static.winhl and preset.static.winhl.active, hl = preset.static.hl },
+          scope = '@static.active',
+          constraints = scope[preset.name] and scope[preset.name].constraints or {},
+        }
       end
 
       if not opts or not opts.callbacks or not preset.modes or dropped_presets[preset.name] then
@@ -216,39 +233,44 @@ function M:gen(opts)
   return self.snapshot
 end
 
----@param preset_name string
----@param inc_mode string
----@param inc_mode_config Reactive.ModeConfig
----@param constraints TriggerConstraints<boolean>
-function M:merge_snapshot(preset_name, inc_mode, inc_mode_config, constraints)
-  if Util.is_op(inc_mode) and inc_mode_config.operators then
+---@param opts { preset_name: string, inc_mode: string, inc_mode_config: Reactive.ModeConfig, constraints: TriggerConstraints<boolean> }
+function M:merge(opts)
+  if Util.is_op(opts.inc_mode) then
     local op = vim.v.operator
 
-    if op and inc_mode_config.operators[op] then
+    if opts.inc_mode_config.operators and opts.inc_mode_config.operators[op] then
+
       if
         op == 'g@'
         and self.current_opfunc
-        and inc_mode_config.operators[op].opfuncs
-        and inc_mode_config.operators[op].opfuncs[self.current_opfunc]
+        and opts.inc_mode_config.operators[op].opfuncs
+        and opts.inc_mode_config.operators[op].opfuncs[self.current_opfunc]
       then
-        self:form_snapshot(
-          preset_name,
-          inc_mode_config.operators[op].opfuncs[self.current_opfunc],
-          ('@mode.%s.@op.g@.%s'):format(inc_mode, self.current_opfunc),
-          constraints
-        )
+        self:form {
+          preset_name = opts.preset_name,
+          highlights = opts.inc_mode_config.operators[op].opfuncs[self.current_opfunc],
+          scope = ('@mode.%s.@op.g@.%s'):format(opts.inc_mode, self.current_opfunc),
+          constraints = opts.constraints,
+        }
       end
 
-      self:form_snapshot(
-        preset_name,
-        inc_mode_config.operators[op],
-        ('@mode.%s.@op.%s'):format(inc_mode, op),
-        constraints
-      )
+
+      self:form {
+        preset_name = opts.preset_name,
+        highlights = opts.inc_mode_config.operators[op],
+        scope = ('@mode.%s.@op.%s'):format(opts.inc_mode, op),
+        constraints = opts.constraints,
+      }
     end
+
   end
 
-  self:form_snapshot(preset_name, inc_mode_config, ('@mode.%s'):format(inc_mode), constraints)
+  self:form {
+    preset_name = opts.preset_name,
+    highlights = opts.inc_mode_config,
+    scope = ('@mode.%s'):format(opts.inc_mode),
+    constraints = opts.constraints,
+  }
 end
 
 local merge_handlers = {
@@ -293,32 +315,29 @@ local merge_handlers = {
   end,
 }
 
----@param preset_name string
----@param highlights table<string, table> | fun(): table<string, table>
----@param scope string
----@param constraints TriggerConstraints
-function M:form_snapshot(preset_name, highlights, scope, constraints)
-  local opts = {
-    scope = string.format('@preset.%s.%s', preset_name, scope),
-    preset_name = preset_name,
+---@param opts { preset_name: string, highlights: table<string, table | fun(): table>, scope: string, constraints: TriggerConstraints }
+function M:form(opts)
+  local handler_options = {
+    scope = string.format('@preset.%s.%s', opts.preset_name, opts.scope),
+    preset_name = opts.preset_name,
   }
 
   Util.each(merge_handlers, function(value)
-    if not highlights[value] or constraints and constraints[value] then
+    if not opts.highlights[value] or opts.constraints and opts.constraints[value] then
       return
     end
 
-    local highlight_values = highlights[value]
+    local highlight_values = opts.highlights[value]
 
     -- highlights can be passed as a funtion and thus be dynamic
     -- in that case we won't cache their values in the `winhl` option
     -- because they can always be different
-    if type(highlights[value]) == 'function' then
-      opts.nocache = true
-      highlight_values = highlights[value]()
+    if type(opts.highlights[value]) == 'function' then
+      handler_options.nocache = true
+      highlight_values = opts.highlights[value]()
     end
 
-    merge_handlers[value](highlight_values, opts)
+    merge_handlers[value](highlight_values, handler_options)
   end)
 end
 
