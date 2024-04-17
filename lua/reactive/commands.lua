@@ -45,9 +45,7 @@ function M:init()
   local function clear_winhighlight_options()
     local windows = vim.api.nvim_list_wins()
 
-    Util.eachi(windows, function(win)
-      Util.delete_reactive_winhl(win)
-    end)
+    Util.eachi(windows, Util.delete_reactive_winhl)
   end
 
   local function clear_highlights()
@@ -69,7 +67,7 @@ function M:init()
       pattern = '*:*',
       desc = 'Reactive: watches for mode changes to update highlights and run callbacks',
       callback = function(opts)
-        local from, to = unpack(vim.split(opts.match, ':'))
+        local from, to = vim.v.event.old_mode, vim.v.event.new_mode
 
         Snapshot:set_modes(from, to)
         local snap = Snapshot:gen { callbacks = true }
