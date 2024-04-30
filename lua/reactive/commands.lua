@@ -96,13 +96,14 @@ function M:init()
       end,
     })
 
-    aucmd('ColorSchemePre', {
+    aucmd('ColorScheme', {
       group = group,
       desc = 'Reactive: removes cached highlights',
       callback = function()
-        Snapshot:clear_cache()
         clear_winhighlight_options()
-        Highlight:sync()
+        clear_highlights()
+        Snapshot:clear_cache()
+        Highlight:sync(true)
       end,
     })
 
@@ -117,9 +118,10 @@ function M:init()
 
     -- clear listeners
     vim.api.nvim_del_augroup_by_name 'reactive.nvim'
-    Snapshot:clear_cache()
-    clear_highlights()
+
     clear_winhighlight_options()
+    clear_highlights()
+    Snapshot:clear_cache()
   end
 
   local function toggle_listeners()
