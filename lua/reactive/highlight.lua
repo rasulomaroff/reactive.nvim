@@ -3,16 +3,16 @@ local M = {
   prev_highlights = {},
 }
 
----@param opts { winid: number, winhl?: table<string, string>, hl?: table<string, table<string, any>>, forced?: boolean }
+---@param opts { winid: number, winhl?: table<string, string>, hl?: table<string, table<string, any>> }
 function M:apply(opts)
   local skip_winhl = self:apply_winhl(opts.winhl, opts.winid)
-  local skip_hl = self:apply_hl(opts.hl, opts.forced)
+  local skip_hl = self:apply_hl(opts.hl)
 
   -- redraw pending screen updates
   -- without this command some highlights won't be applied immediately
   -- or till the next "redraw" caused by nvim itself
   -- but we won't redraw if it's not forced or there're no highlights applied or changed
-  if not skip_winhl or not skip_hl or opts.forced then
+  if not skip_winhl or not skip_hl then
     vim.cmd.redraw()
   end
 end
@@ -101,32 +101,31 @@ function M:apply_hl(highlights, forced)
   return false
 end
 
-function M:sync()
+---@param forced boolean? forcely apply highlights
+function M:sync(forced)
   local Util = require 'reactive.util'
-  local Snapshot = require 'reactive.snapshot'
-  local windows = vim.api.nvim_list_wins()
+  local snapshot = require('reactive.snapshot'):gen()
   local current_win = vim.api.nvim_get_current_win()
 
-  Util.eachi(windows, function(win)
-    if win == current_win then
+  -- we'll only apply global highlights once as it makes no sense to do it
+  -- several times
+  local skip_hl = self:apply_hl(snapshot.hl, forced)
+  local skip_winhl = true
+
+  Util.eachi(vim.api.nvim_list_wins(), function(win)
+    -- we don't apply colours to non-focusable windows
+    if not vim.api.nvim_win_get_config(win).focusable then
       return
     end
 
-    local snap = Snapshot:gen { inactive_win = true }
-    self:apply_winhl(snap.winhl, win)
+    if not self:apply_winhl(win == current_win and snapshot.winhl.current or snapshot.winhl.noncurrent, win) then
+      skip_winhl = false
+    end
   end)
 
-  local current_win_snap = Snapshot:gen()
-  -- we'll only apply global highlights once as it makes no sense to do it
-  -- several times
-  self:apply {
-    hl = current_win_snap.hl,
-    winhl = current_win_snap.winhl,
-    winid = current_win,
-    -- whenever we 'sync' colors, we should forcely apply new highlights even though there
-    -- could be the same highlight groups that had been applied before
-    forced = true,
-  }
+  if not skip_hl or not skip_winhl then
+    vim.cmd.redraw()
+  end
 end
 
 return M

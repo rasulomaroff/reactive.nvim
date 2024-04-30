@@ -32,36 +32,14 @@ function M:set_opfunc(opfunc)
 end
 
 ---@param opts? { inactive_win?: boolean, callbacks?: boolean }
----@return { winhl: table<string, string>, hl: table<string, table> }
+---@return { winhl: { current: table<string, string>, noncurrent: table<string, string> }, hl: table<string, table> }
 function M:gen(opts)
   local State = require 'reactive.state'
 
-  self.snapshot = { winhl = {}, hl = {} }
-
-  -- if we're leaving a window, then we just color that window with `inactive` colors, if presented
-  if opts and opts.inactive_win then
-    State:iterate_presets(function(preset)
-      local constraints = {}
-
-      if
-        preset.static
-        and not vim.tbl_isempty(preset.static)
-        and not self:process_constraints(preset.skip, constraints)
-      then
-        self:form {
-          preset_name = preset.name,
-          highlights = {
-            winhl = preset.static.winhl and preset.static.winhl.inactive,
-            hl = preset.static.hl,
-          },
-          scope = '@static.inactive',
-          constraints = constraints,
-        }
-      end
-    end)
-
-    return self.snapshot
-  end
+  self.snapshot = {
+    winhl = { current = {}, noncurrent = {} },
+    hl = {},
+  }
 
   local mode = self.to
   local mode_len = #mode
@@ -196,9 +174,22 @@ function M:gen(opts)
       if preset.static and not vim.tbl_isempty(preset.static) then
         self:form {
           preset_name = preset.name,
-          highlights = { winhl = preset.static.winhl and preset.static.winhl.active, hl = preset.static.hl },
-          scope = '@static.active',
+          highlights = {
+            winhl = preset.static.winhl and preset.static.winhl.active,
+            hl = preset.static.hl,
+          },
+          scope = '@static.current',
           constraints = scope[preset.name] and scope[preset.name].constraints or {},
+        }
+
+        self:form {
+          preset_name = preset.name,
+          highlights = {
+            winhl = preset.static.winhl and preset.static.winhl.inactive,
+          },
+          scope = '@static.noncurrent',
+          constraints = scope[preset.name] and scope[preset.name].constraints or {},
+          window_scope = 'noncurrent',
         }
       end
 
@@ -278,7 +269,7 @@ local merge_handlers = {
     Util.each(highlights, function(hl_group, hl_val)
       -- if a group is already applied, then we won't overwrite it
       -- meaning that it had a higher priority
-      if M.snapshot.winhl[hl_group] then
+      if M.snapshot.winhl[opts.window_scope][hl_group] then
         return
       end
 
@@ -297,9 +288,9 @@ local merge_handlers = {
           M.cache.transformed_winhl[key] = rhs
         end
 
-        M.snapshot.winhl[hl_group] = rhs
+        M.snapshot.winhl[opts.window_scope][hl_group] = rhs
       else
-        M.snapshot.winhl[hl_group] = cached_hl
+        M.snapshot.winhl[opts.window_scope][hl_group] = cached_hl
       end
     end)
   end,
@@ -315,11 +306,12 @@ local merge_handlers = {
   end,
 }
 
----@param opts { preset_name: string, highlights: table<string, table | fun(): table>, scope: string, constraints: TriggerConstraints }
+---@param opts { preset_name: string, highlights: table<string, table | fun(): table>, scope: string, constraints: TriggerConstraints, window_scope?: 'current' | 'noncurrent' }
 function M:form(opts)
   local handler_options = {
     scope = string.format('@preset.%s.%s', opts.preset_name, opts.scope),
     preset_name = opts.preset_name,
+    window_scope = opts.window_scope or 'current',
   }
 
   Util.each(merge_handlers, function(value)

@@ -66,31 +66,38 @@ function M:init()
       group = group,
       pattern = '*:*',
       desc = 'Reactive: watches for mode changes to update highlights and run callbacks',
-      callback = function(opts)
-        local from, to = vim.v.event.old_mode, vim.v.event.new_mode
-
-        Snapshot:set_modes(from, to)
+      callback = function()
+        Snapshot:set_modes(vim.v.event.old_mode, vim.v.event.new_mode)
         local snap = Snapshot:gen { callbacks = true }
 
         Highlight:apply {
           hl = snap.hl,
-          winhl = snap.winhl,
+          winhl = snap.winhl.current,
           winid = api.nvim_get_current_win(),
         }
       end,
     })
 
-    -- We need BufWinEnter event to successfully handle cases where you open a window
-    -- then through telescope go to another one and then go back through Ctrl + o
-    aucmd({ 'WinEnter', 'BufWinEnter', 'WinLeave' }, {
+    aucmd('WinEnter', {
       group = group,
       desc = 'Reactive: applies active/inactive window highlights',
-      callback = function(opts)
-        local snap = Snapshot:gen { inactive_win = opts.event == 'WinLeave' }
+      callback = function()
+        Highlight:sync()
+      end,
+    })
 
+    -- We use this autocmd to fix the bug when after entering a file through a telescope/fzf/whatever
+    -- and then jumping back through ctrl+o mapping we could get highlights for noncurrent windows or
+    -- highlights for a different mode, for example having a highlights for insert mode while being in normal
+    -- it may be a neovim issue (or feature?), because I don't see any reasons for it to happen
+    aucmd('BufWinEnter', {
+      group = group,
+      desc = 'Reactive: applies active/inactive window highlights',
+      callback = function()
+        local snap = Snapshot:gen()
         Highlight:apply {
           hl = snap.hl,
-          winhl = snap.winhl,
+          winhl = snap.winhl.current,
           winid = api.nvim_get_current_win(),
         }
       end,
@@ -107,7 +114,7 @@ function M:init()
       end,
     })
 
-    Highlight:sync()
+    Highlight:sync(true)
   end
 
   local function stop_plugin()
