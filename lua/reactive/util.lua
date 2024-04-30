@@ -64,7 +64,7 @@ end
 ---@param hl string
 ---@boolean
 function M.is_reactive_hl(hl)
-  return vim.fn.matchstr(hl, [[Reactive.*@\(mode\|static\.\)]]) ~= ''
+  return vim.fn.matchstr(hl, [[^Reactive.*@preset\.]]) ~= ''
 end
 
 --- Deeply merges two tables without index/numeric keys
