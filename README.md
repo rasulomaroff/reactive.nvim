@@ -1,16 +1,12 @@
 <h1 align="center">reactive.nvim</h1>
 <p align="center"><sup>Reactivity. Right in your neovim.</sup></p>
 
-<div align="center">
-  <img src="https://img.shields.io/badge/Made%20with%20Lua-blueviolet.svg?style=for-the-badge&logo=lua">
-  <img src="https://img.shields.io/github/stars/rasulomaroff/reactive.nvim?style=for-the-badge">
-  <img src="https://img.shields.io/github/license/rasulomaroff/reactive.nvim?style=for-the-badge">
-  <img src="https://img.shields.io/github/last-commit/rasulomaroff/reactive.nvim?style=for-the-badge">
-</div>
+![reactive-banner](https://github.com/rasulomaroff/reactive.nvim/assets/80093436/1cb68ae0-477f-48c0-9c56-c188a855ee56)
+
 
 ## Features
 
-- **Performant**: `reactive.nvim` uses neovim events to apply highlights (`ModeChanged` for mode changes, `WinEnter`, `WinLeave`, and `BufWinEnter` for coloring active/inactive windows), your input isn't monitored at all.
+- **Performant**: `reactive.nvim` uses neovim events to apply highlights (`ModeChanged` for mode changes, `WinEnter`, , and `BufWinEnter` for coloring active/inactive windows), your input isn't monitored at all.
 - **Window highlights**: apply highlights only for a current window. Utilizes `'winhighlight'` neovim-specific option. (read more `:h 'winhighlight'`).
 - **Highlights**: apply/change global highlights on mode changes.
 - **Highly customizable**: you can customize literally any mode, even very specific one like `niI` (triggered when you press Ctrl + o in insert mode)
