@@ -171,7 +171,9 @@ Reactive has the following commands you can use:
 2. `ReactiveStop` - removes listeners.
 3. `ReactiveToggle` - toggles state between 2 commands above.
 4. `Reactive enable <preset>` - enables selected preset.
+4. `Reactive enable_all` - enables all presets.
 5. `Reactive disable <preset>` - disables selected preset.
+5. `Reactive disable_all` - disables all presets.
 6. `Reactive toggle <preset>` - toggles selected preset.
 
 ## Configuration

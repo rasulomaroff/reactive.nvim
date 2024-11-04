@@ -222,6 +222,12 @@ function M:enable_preset(name)
   require('reactive.highlight'):sync()
 end
 
+function M:enable_all_presets()
+  for preset_name in pairs(self.disabled_presets) do
+    self:enable_preset(preset_name)
+  end
+end
+
 ---@param name string
 function M:disable_preset(name)
   if self.disabled_presets[name] then
@@ -240,6 +246,12 @@ function M:disable_preset(name)
     end
   end
   require('reactive.highlight'):sync()
+end
+
+function M:disable_all_presets()
+  for preset_name in pairs(self.presets) do
+    self:disable_preset(preset_name)
+  end
 end
 
 ---@param name string

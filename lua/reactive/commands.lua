@@ -28,11 +28,17 @@ M.commands = {
   enable = function(preset)
     require('reactive.state'):enable_preset(preset)
   end,
+  enable_all = function()
+    require('reactive.state'):enable_all_presets()
+  end,
   toggle = function(preset)
     require('reactive.state'):toggle_preset(preset)
   end,
   disable = function(preset)
     require('reactive.state'):disable_preset(preset)
+  end,
+  disable_all = function()
+    require('reactive.state'):disable_all_presets()
   end,
 }
 
