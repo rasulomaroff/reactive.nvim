@@ -158,14 +158,16 @@ function M:init()
       return
     end
 
-    if not val then
+    local is_preset_required = cmd == 'enable' or cmd == 'disable' or cmd == 'toggle'
+
+    if not val and is_preset_required then
       vim.notify('reactive.nvim: specify a preset name', vim.log.levels.ERROR)
       return
     end
 
     if not self.commands[cmd] then
       vim.notify('reactive.nvim: There\'s no such a command: ' .. cmd, vim.log.levels.ERROR)
-    elseif not require('reactive.state').presets[val] then
+    elseif is_preset_required and not require('reactive.state').presets[val] then
       vim.notify('reactive.nvim: There\'s no such a preset: ' .. val, vim.log.levels.ERROR)
     else
       self.commands[cmd](val)
