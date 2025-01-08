@@ -153,6 +153,16 @@ function M:init()
   user_cmd('Reactive', function(opts)
     local cmd, val = unpack(vim.split(vim.trim(opts.args), '%s+'))
 
+    if not cmd or vim.trim(cmd) == '' then
+      vim.notify('reactive.nvim: specify a command', vim.log.levels.ERROR)
+      return
+    end
+
+    if not val then
+      vim.notify('reactive.nvim: specify a preset name', vim.log.levels.ERROR)
+      return
+    end
+
     if not self.commands[cmd] then
       vim.notify('reactive.nvim: There\'s no such a command: ' .. cmd, vim.log.levels.ERROR)
     elseif not require('reactive.state').presets[val] then
