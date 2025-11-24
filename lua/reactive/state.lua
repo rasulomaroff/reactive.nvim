@@ -70,29 +70,23 @@ end
 
 ---@param preset Reactive.Preset
 function M:add_preset(preset)
-  vim.validate {
-    name = {
-      preset.name,
-      function(value)
-        if type(value) ~= 'string' then
-          return false, 'preset name has to be a string'
-        end
+  vim.validate('name', preset.name, function(value)
+    if type(value) ~= 'string' then
+      return false, 'preset name has to be a string'
+    end
 
-        local invalid_chars = value:match '[^a-zA-Z0-9_-]+'
+    local invalid_chars = value:match '[^a-zA-Z0-9_-]+'
 
-        if invalid_chars ~= nil then
-          return false,
-            [[You've used an invalid character(s) in a preset name.
+    if invalid_chars ~= nil then
+      return false,
+        [[You've used an invalid character(s) in a preset name.
               Allowed: a-z A-Z 0-9 _ -
               Whitespace is not allowed as well.
               Your invalid characters:]] .. invalid_chars
-        end
+    end
 
-        return true
-      end,
-      'a valid string',
-    },
-  }
+    return true
+  end, 'a valid string')
 
   preset = Preset:parse(preset)
 
