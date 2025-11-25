@@ -70,7 +70,7 @@ end
 
 ---@param preset Reactive.Preset
 function M:add_preset(preset)
-  vim.validate('name', preset.name, function(value)
+  local validator = function(value)
     if type(value) ~= 'string' then
       return false, 'preset name has to be a string'
     end
@@ -86,7 +86,13 @@ function M:add_preset(preset)
     end
 
     return true
-  end, 'a valid string')
+  end
+
+  if vim.fn.has 'nvim-0.11' == 1 then
+    vim.validate('name', preset.name, validator, 'a valid string')
+  else
+    vim.validate { name = { preset.name, validator, 'a valid string' } }
+  end
 
   preset = Preset:parse(preset)
 
